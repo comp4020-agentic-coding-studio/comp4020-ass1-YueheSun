@@ -4,4 +4,4 @@
 // fill its [data-testid="bird-info"] child from the bird's data-name,
 // data-feature, data-distribution attributes. Both events matter: hover
 // alone doesn't fire on a phone, which has no cursor (spec line 3).
-export function initBirdCards(root: Document): void {}
+export function initBirdCards(_root: Document): void {}
