@@ -135,6 +135,10 @@ means building legibly is part of building well.
   `pnpm check:evidence` verifies your citations resolve to real commits before
   you ship. Markers follow those citations and don't trawl the repo for evidence
   you didn't cite.
+  No skill or command drafts this for you — after any commit that reflects a
+  real judgment call (rejected the agent's first approach, added a rule to this
+  file, caught something with a check), add the `PROCESS.md` entry then, while
+  the why is still fresh, rather than reconstructing it all at the end.
 - **Write your reflection in `reflections/`** --- a short markdown file in this
   repo, named for the deliverable it answers, so the number in the filename is
   the number in this repo's name (`crit-1.md` in `comp4020-crit1-<you>`,
