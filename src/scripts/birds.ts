@@ -52,7 +52,16 @@ function wireRound(round: HTMLElement, onAdvance: () => void): void {
   const detailNotes = round.querySelector<HTMLElement>('[data-testid="detail-notes"]');
   const detailPhoto = round.querySelector<HTMLImageElement>('[data-testid="detail-photo"]');
   const mysteryPhoto = round.querySelector<HTMLImageElement>('[data-testid="mystery-photo"]');
-  if (!correct || !guessScreen || !detailScreen || !outcome || !detailFeature || !detailNotes) {
+  const detailNext = round.querySelector<HTMLElement>('[data-testid="detail-next"]');
+  if (
+    !correct ||
+    !guessScreen ||
+    !detailScreen ||
+    !outcome ||
+    !detailFeature ||
+    !detailNotes ||
+    !detailNext
+  ) {
     return;
   }
 
@@ -128,7 +137,10 @@ function wireRound(round: HTMLElement, onAdvance: () => void): void {
     if (direction) choose(direction);
   });
 
-  detailScreen.addEventListener("click", next);
+  // Only the dedicated button advances — a tap anywhere else on the detail
+  // screen (photo, notes) used to trigger it too, which was too easy to
+  // fire by accident while just reading.
+  detailNext.addEventListener("click", next);
 }
 
 export function initBirdGame(root: Document): void {

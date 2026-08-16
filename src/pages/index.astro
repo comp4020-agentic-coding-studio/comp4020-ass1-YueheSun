@@ -50,7 +50,7 @@ import { roundPhotoUrl } from "../data/round-photos";
                 </div>
               </div>
 
-              <div class="screen screen-detail" data-testid="screen-detail" role="button" tabindex="0" hidden>
+              <div class="screen screen-detail" data-testid="screen-detail" hidden>
                 <p class="detail-outcome" data-testid="outcome" />
                 <p class="detail-feature" data-testid="detail-feature" />
                 <div class="detail-photo-wrap">
@@ -64,7 +64,7 @@ import { roundPhotoUrl } from "../data/round-photos";
                   )}
                 </div>
                 <p class="detail-notes" data-testid="detail-notes" />
-                <p class="detail-hint">(tap anywhere to continue)</p>
+                <button class="detail-next" data-testid="detail-next" type="button">Next</button>
               </div>
             </div>
           </section>
@@ -78,7 +78,7 @@ import { roundPhotoUrl } from "../data/round-photos";
     </div>
 
     <p class="howto">
-      Tap a name, press an arrow key, or swipe toward it. Then tap anywhere to continue.
+      Tap a name, press an arrow key, or swipe toward it. Then tap Next to continue.
     </p>
   </main>
   <script>

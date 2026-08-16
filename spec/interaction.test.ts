@@ -6,10 +6,12 @@
 // pick — right or wrong — jumps straight to a detail screen: an outcome line
 // ("Nice!" or "So close! It's the <species>."), then the one feature that
 // actually distinguishes it, then the mystery photo again (now with an alt
-// caption naming the bird), then a supporting habitat/behaviour note. "Next"
-// is any tap (or Enter/Space) anywhere on that detail screen — no separate
-// button — and it carries button semantics (role/tabindex) so this is also
-// keyboard-reachable, not tap-only. The transition into the detail screen
+// caption naming the bird), then a supporting habitat/behaviour note, then a
+// dedicated "Next" button (data-testid="detail-next"). Advancing requires
+// hitting that button (or Enter/Space, since a real <button> gets that for
+// free) — tapping elsewhere on the detail screen must NOT advance, which used
+// to be the contract and turned out to be too easy to trigger by accident
+// while just reading the photo/notes. The transition into the detail screen
 // mirrors the direction that was picked (swipe/press left → arrives from the
 // right), so that's asserted too via the `enter-from-*` class it applies.
 // The keyboard and swipe tests below deliberately dispatch their events on
@@ -47,11 +49,12 @@ function renderFixture() {
                 data-notes="common in parks and gardens; noisy and gregarious, eats fruit and insects"></button>
         <button data-testid="option" data-position="right" data-name="Oriental Magpie-Robin"></button>
       </div>
-      <div data-testid="screen-detail" role="button" tabindex="0" hidden>
+      <div data-testid="screen-detail" hidden>
         <p data-testid="outcome"></p>
         <p data-testid="detail-feature"></p>
         <img data-testid="detail-photo" alt="" />
         <p data-testid="detail-notes"></p>
+        <button data-testid="detail-next" type="button">Next</button>
       </div>
     </section>
   `,
@@ -73,6 +76,7 @@ function renderFixture() {
     detailFeature: document.querySelector<HTMLElement>('[data-testid="detail-feature"]')!,
     detailNotes: document.querySelector<HTMLElement>('[data-testid="detail-notes"]')!,
     detailPhoto: document.querySelector<HTMLImageElement>('[data-testid="detail-photo"]')!,
+    detailNext: document.querySelector<HTMLElement>('[data-testid="detail-next"]')!,
   };
 }
 
@@ -132,18 +136,30 @@ describe("bird identification game", () => {
   });
 
   it("animates the guess screen back in from that same edge on 'Next', continuing the motion rather than reversing it", () => {
-    const { window, option, guessScreen, detailScreen } = renderFixture();
+    const { window, option, guessScreen, detailNext } = renderFixture();
     option("top").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    detailScreen.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    detailNext.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
     expect(guessScreen.classList.contains("enter-from-bottom"), NEXT_STEP).toBe(true);
   });
 
-  it("returns to the guess screen on a tap anywhere on the detail screen — 'Next' is the detail screen itself", () => {
-    const { window, option, guessScreen, detailScreen } = renderFixture();
+  it("returns to the guess screen on clicking the dedicated Next button", () => {
+    const { window, option, guessScreen, detailScreen, detailNext } = renderFixture();
+    option("top").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    expect(detailScreen.hidden).toBe(false);
+    detailNext.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    expect(detailScreen.hidden, NEXT_STEP).toBe(true);
+    expect(guessScreen.hidden).toBe(false);
+  });
+
+  it("does NOT advance on a tap elsewhere on the detail screen — only the Next button should", () => {
+    const { window, option, detailScreen } = renderFixture();
     option("top").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
     expect(detailScreen.hidden).toBe(false);
     detailScreen.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    expect(detailScreen.hidden, NEXT_STEP).toBe(true);
-    expect(guessScreen.hidden).toBe(false);
+    expect(
+      detailScreen.hidden,
+      "A tap anywhere on the detail screen used to advance — that was too easy to " +
+        "trigger by accident. Only the dedicated Next button should now.",
+    ).toBe(false);
   });
 });

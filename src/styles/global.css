@@ -175,7 +175,6 @@ a {
   border: 1px solid #d98c3f;
   border-radius: 0.75rem;
   background: #fff6ea;
-  cursor: pointer;
   text-align: center;
 }
 
@@ -242,10 +241,20 @@ a {
   margin: 0 0 0.5rem;
 }
 
-.detail-hint {
-  font-size: 0.85rem;
-  color: #888;
-  margin: 0;
+.detail-next {
+  font: inherit;
+  font-weight: bold;
+  padding: 0.6rem 1.5rem;
+  border: 1px solid #0b5fff;
+  border-radius: 0.5rem;
+  background: #0b5fff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.detail-next:hover,
+.detail-next:focus-visible {
+  background: #084acc;
 }
 
 .screen-complete {
