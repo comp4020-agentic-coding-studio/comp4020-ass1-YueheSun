@@ -334,3 +334,51 @@ truncated for reasons unrelated to layout).
 complete/restart screen (`.screen-complete`, "tap anywhere to restart") —
 explicitly out of scope for this pass, not yet reported as a problem, and not
 fixed here.
+
+---
+
+### Added "Back to previous question," which gave `initBirdGame`'s cross-round chaining its first unit test coverage
+
+**What happened:** requested feature: a button letting the visitor return to
+the previous round's detail screen if they clicked Next before finishing
+reading it. Implemented in `initBirdGame` (not `wireRound`) since it reaches
+into a *different* round's DOM and mutates the shared `current` counter —
+wiring that's inherently page-level. Returning from the peek needed no new
+listener: the peeked round's own already-wired `detail-next` → `next()` →
+`onAdvance()` chain closes over the same `current` variable the peek
+decremented, so it naturally lands forward again exactly where the visitor
+left off.
+
+**Not just a feature add — closed a real coverage gap:** `renderFixture()` in
+`spec/interaction.test.ts` has only ever built one `.round`, so
+`initBirdGame`'s cross-round machinery (`current`, `showRound()`, the
+`onAdvance` chaining between rounds) had zero unit coverage before this —
+`f4c5b58`'s entry above notes it was only ever confirmed by inspecting the
+built `dist/index.html` by eye. Added a second fixture,
+`renderRoundsFixture(count)`, that renders N real rounds and drives
+`initBirdGame` against all of them together, then used it to assert the
+state-preservation claim the whole feature depends on directly: answering
+round 0, advancing to round 1, peeking back, and asserting round 0's outcome
+text is still `"Nice!"` — not re-derived, the literal string set by the
+original answer. That fixture now exists for any future cross-round feature
+to reuse, not just this one.
+
+**How I knew it was right:** `pnpm check` green, 72/72 → 75/75 (3 new tests:
+button hidden on round 0, visible after, and the full peek-forward-again
+round trip). One stylelint fix needed along the way
+(`declaration-block-no-redundant-longhand-properties` on the new
+`.back-question` rule — collapsed separate `align-self`/`justify-self` into
+`place-self: start`). Verified in a real browser at both 1920×1080 and
+390×844 (same `LD_LIBRARY_PATH` Playwright workaround as `53ea586`): button
+renders in the previously-empty top-left grid cell with no overlap or
+horizontal overflow at either width, peeking shows round 0's original
+outcome/feature/photo/notes untouched, and returning lands back on round 1's
+still-unanswered guess screen.
+
+**Citation:** [`3868b66`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/3868b66)
+
+**Caution:** no `setEntry`/`enter-from-*` animation plays on the peek
+transition itself (only the return leg is animated, for free, via the
+unchanged `next()` path) — deliberate, since there's no swipe/keypress
+direction to reflect for a button click, but not verified against every
+possible stale-animation-class edge case beyond the one scenario driven above.
