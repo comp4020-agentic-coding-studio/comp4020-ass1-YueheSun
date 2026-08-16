@@ -20,6 +20,33 @@ a {
   color: #444;
 }
 
+.stage {
+  position: relative;
+  overflow: hidden;
+}
+
+.screen {
+  animation: page-swipe-in 360ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes page-swipe-in {
+  from {
+    transform: translateX(16%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen {
+    animation: none;
+  }
+}
+
 .board {
   display: grid;
   grid-template-columns: 1fr 2fr 1fr;
@@ -27,16 +54,26 @@ a {
   gap: 0.75rem;
   max-width: 28rem;
   margin: 2rem auto;
+
+  /* Swipes must reach our pointer handlers instead of being hijacked by the
+     browser as a page scroll/pan (which fires pointercancel, not pointerup). */
+  touch-action: none;
 }
 
-.mystery-photo {
-  grid-column: 2;
-  grid-row: 2;
+.mystery-photo,
+.detail-photo {
   width: 100%;
   height: 100%;
   object-fit: cover;
   border-radius: 0.75rem;
   border: 1px solid #ccc;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.mystery-photo {
+  grid-column: 2;
+  grid-row: 2;
 }
 
 .option {
@@ -75,38 +112,38 @@ a {
   grid-row: 2;
 }
 
-.feedback {
-  min-height: 1.6rem;
-  text-align: center;
-  font-weight: bold;
-  color: #1a7a3d;
-}
-
-.reveal {
+.screen-detail {
   max-width: 28rem;
-  margin: 0 auto;
+  margin: 2rem auto;
   padding: 1rem 1.25rem;
   border: 1px solid #d98c3f;
   border-radius: 0.75rem;
   background: #fff6ea;
   cursor: pointer;
+  text-align: center;
 }
 
-.reveal-species {
+.detail-outcome {
   font-weight: bold;
-  margin: 0 0 0.25rem;
-}
-
-.reveal-feature {
+  font-size: 1.2rem;
   margin: 0 0 0.5rem;
 }
 
-.reveal-notes {
+.detail-feature {
+  margin: 0 0 0.75rem;
+}
+
+.detail-photo {
+  max-width: 16rem;
+  margin: 0 auto 0.75rem;
+}
+
+.detail-notes {
   color: #555;
   margin: 0 0 0.5rem;
 }
 
-.reveal-hint {
+.detail-hint {
   font-size: 0.85rem;
   color: #888;
   margin: 0;

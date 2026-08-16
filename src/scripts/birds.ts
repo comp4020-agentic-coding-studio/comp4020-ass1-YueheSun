@@ -23,32 +23,40 @@ function wireRound(round: HTMLElement): void {
     round.querySelectorAll<HTMLElement>('[data-testid="option"]'),
   );
   const correct = options.find((option) => option.dataset.correct === "true");
-  const feedback = round.querySelector<HTMLElement>('[data-testid="feedback"]');
-  const reveal = round.querySelector<HTMLElement>('[data-testid="reveal"]');
-  if (!correct || !feedback || !reveal) return;
-
-  const revealField = (name: string) =>
-    reveal.querySelector<HTMLElement>(`[data-testid="reveal-${name}"]`);
-
-  function choose(position: Direction): void {
-    if (position === correct!.dataset.position) {
-      feedback!.textContent = "Nice!";
-      reveal!.hidden = true;
-      return;
-    }
-    feedback!.textContent = "";
-    const species = revealField("species");
-    const feature = revealField("feature");
-    const notes = revealField("notes");
-    if (species) species.textContent = correct!.dataset.name ?? "";
-    if (feature) feature.textContent = correct!.dataset.feature ?? "";
-    if (notes) notes.textContent = correct!.dataset.notes ?? "";
-    reveal!.hidden = false;
+  const guessScreen = round.querySelector<HTMLElement>('[data-testid="screen-guess"]');
+  const detailScreen = round.querySelector<HTMLElement>('[data-testid="screen-detail"]');
+  const outcome = round.querySelector<HTMLElement>('[data-testid="outcome"]');
+  const detailFeature = round.querySelector<HTMLElement>('[data-testid="detail-feature"]');
+  const detailNotes = round.querySelector<HTMLElement>('[data-testid="detail-notes"]');
+  const detailPhoto = round.querySelector<HTMLImageElement>('[data-testid="detail-photo"]');
+  const mysteryPhoto = round.querySelector<HTMLImageElement>('[data-testid="mystery-photo"]');
+  if (!correct || !guessScreen || !detailScreen || !outcome || !detailFeature || !detailNotes) {
+    return;
   }
 
-  function dismiss(): void {
-    reveal!.hidden = true;
-    feedback!.textContent = "";
+  const doc = round.ownerDocument;
+  const isGuessing = () => !guessScreen.hidden;
+
+  function showDetail(isCorrect: boolean): void {
+    outcome!.textContent = isCorrect ? "Nice!" : `So close! It's the ${correct!.dataset.name}.`;
+    detailFeature!.textContent = correct!.dataset.feature ?? "";
+    detailNotes!.textContent = correct!.dataset.notes ?? "";
+    if (detailPhoto && mysteryPhoto) {
+      detailPhoto.src = mysteryPhoto.src;
+      detailPhoto.alt = `${correct!.dataset.name} — showing ${correct!.dataset.feature}`;
+    }
+    guessScreen!.hidden = true;
+    detailScreen!.hidden = false;
+  }
+
+  function next(): void {
+    detailScreen!.hidden = true;
+    guessScreen!.hidden = false;
+  }
+
+  function choose(position: Direction): void {
+    if (!isGuessing()) return;
+    showDetail(position === correct!.dataset.position);
   }
 
   for (const option of options) {
@@ -56,17 +64,27 @@ function wireRound(round: HTMLElement): void {
     if (position) option.addEventListener("click", () => choose(position));
   }
 
-  round.addEventListener("keydown", (event) => {
-    const direction = ARROW_TO_DIRECTION[(event as KeyboardEvent).key];
-    if (direction) choose(direction);
+  // Listens on `document`, not `round`: keydown only bubbles up from
+  // whatever element currently has focus, and nothing inside `round` is
+  // focused by default, so a round-scoped listener would silently miss
+  // every key press until the visitor happened to click something first.
+  doc.addEventListener("keydown", (event) => {
+    const key = (event as KeyboardEvent).key;
+    if (isGuessing()) {
+      const direction = ARROW_TO_DIRECTION[key];
+      if (direction) choose(direction);
+    } else if (key === "Enter" || key === " ") {
+      next();
+    }
   });
 
   let swipeStart: { x: number; y: number } | null = null;
-  round.addEventListener("pointerdown", (event) => {
+  doc.addEventListener("pointerdown", (event) => {
+    if (!isGuessing()) return;
     const { clientX, clientY } = event as PointerEvent;
     swipeStart = { x: clientX, y: clientY };
   });
-  round.addEventListener("pointerup", (event) => {
+  doc.addEventListener("pointerup", (event) => {
     if (!swipeStart) return;
     const { clientX, clientY } = event as PointerEvent;
     const direction = directionFromSwipe(clientX - swipeStart.x, clientY - swipeStart.y);
@@ -74,11 +92,7 @@ function wireRound(round: HTMLElement): void {
     if (direction) choose(direction);
   });
 
-  reveal.addEventListener("click", dismiss);
-  reveal.addEventListener("keydown", (event) => {
-    const key = (event as KeyboardEvent).key;
-    if (key === "Enter" || key === " ") dismiss();
-  });
+  detailScreen.addEventListener("click", next);
 }
 
 export function initBirdGame(root: Document): void {

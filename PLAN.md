@@ -18,13 +18,18 @@ A round:
 2. Visitor picks one — by tapping/clicking the button, by an arrow key, or by
    swiping. All three are the same action through different input devices,
    not three features.
-3. Correct → "Nice!" appears in place. Wrong → a reveal panel replaces it:
-   the correct species' name, the **one** feature that actually distinguishes
-   it from the others in the round, and one short line of habitat/behaviour
-   context underneath.
-4. A "Next" action advances to the next round. After the last round: a plain
-   "that's all of them — play again?" state that resets to round 1. No score
-   page, no stats.
+3. Any pick — right or wrong — jumps straight to a full detail screen (not an
+   inline reveal): an outcome line ("Nice!", or "So close! It's the
+   `<species>`." naming the correct answer), then the **one** feature that
+   actually distinguishes it, then the mystery photo again (now captioned),
+   then one short line of habitat/behaviour context underneath. The jump
+   between screens is a swipe-style page transition, always the same
+   direction (not mirroring which option/swipe direction the visitor picked —
+   simplest thing that still reads as "a page turned").
+4. A "Next" action — tapping (or Enter/Space) anywhere on the detail screen,
+   no separate button — advances to the next round. After the last round: a
+   plain "that's all of them — play again?" state that resets to round 1. No
+   score page, no stats.
 
 That's the whole app. One page, one state machine, one dataset.
 
@@ -69,9 +74,33 @@ That's the whole app. One page, one state machine, one dataset.
 
 ## Resolved
 
-- **"Next" is any tap on the reveal panel itself** — no separate button. The
-  reveal panel is a real `<button>` (or has button semantics) so this also
-  covers keyboard activation for free, not just pointer/touch.
+- **"Next" is any tap on the detail screen itself** — no separate button. The
+  detail screen carries button semantics (role/tabindex, plus a document-level
+  Enter/Space handler) so this also covers keyboard activation, not just
+  pointer/touch.
+- **A pick always jumps to a full detail screen**, whether right or wrong —
+  not an inline "Nice!"/reveal-panel toggle in place. Right and wrong now
+  render the same screen shape (outcome line, feature, photo, notes); only the
+  outcome line's wording differs.
+- **"Corresponding image" on the detail screen is the same mystery photo**,
+  re-shown with a caption that now names the species — not a second photo
+  asset per round. Keeps PLAN's "one photo per round" minimum-content
+  requirement unchanged.
+- **Notes (habitat/behaviour) are kept** on the detail screen, appended after
+  the photo, even though they weren't explicitly re-requested when this screen
+  was redesigned — nothing said to cut them, and they were the original
+  science-communication content goal.
+- **Keyboard/swipe listeners are attached to `document` (via `round.ownerDocument`),
+  not to the `round` element.** A round-scoped `keydown` listener only ever
+  fires if focus is already inside `round` when the key is pressed; nothing
+  focuses anything there by default, so arrow keys silently did nothing until
+  the visitor had already clicked a button once. Swipes were separately broken
+  on real touchscreens because `touch-action` defaulted to `auto`, so the
+  browser consumed the gesture as a page pan (firing `pointercancel`, which
+  wasn't handled, instead of `pointerup`) — fixed with `touch-action: none` on
+  `.board`. Both bugs passed the jsdom spec tests because jsdom dispatches
+  synthetic events directly with no focus or gesture semantics attached, which
+  is exactly why they went unnoticed until tested on a real page/device.
 
 ## Open before building
 

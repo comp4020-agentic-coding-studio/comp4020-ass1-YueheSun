@@ -2,15 +2,16 @@
 // Contract for this prototype: a mystery-bird photo with four options placed
 // top/bottom/left/right. The visitor picks one by tap/click, by an arrow key,
 // or by a swipe — a phone swipes, a desktop presses arrow keys, and either
-// should also just be tappable, so all three paths are asserted here. A
-// correct pick shows "Nice!" in place; a wrong pick reveals the correct
-// species, the one feature that actually distinguishes it, and brief
-// supporting notes (habitat/behaviour) below that feature. The reveal itself
-// is "Next": tapping it (no separate button) dismisses it and resets for
-// another guess — it carries button semantics (role/tabindex) so this is
-// also keyboard-reachable, not tap-only. Background music is deliberately
-// not asserted here: it's ambient mood-setting, independent of whether the
-// pick was right or wrong, so it isn't part of this interaction contract.
+// should also just be tappable, so all three paths are asserted here. Any
+// pick — right or wrong — jumps straight to a detail screen: an outcome line
+// ("Nice!" or "So close! It's the <species>."), then the one feature that
+// actually distinguishes it, then the mystery photo again (now with an alt
+// caption naming the bird), then a supporting habitat/behaviour note. "Next"
+// is any tap (or Enter/Space) anywhere on that detail screen — no separate
+// button — and it carries button semantics (role/tabindex) so this is also
+// keyboard-reachable, not tap-only. Background music is deliberately not
+// asserted here: it's ambient mood-setting, independent of whether the pick
+// was right or wrong, so it isn't part of this interaction contract.
 // This drives `initBirdGame` against a markup fixture; it doesn't care how
 // the real page is built, only that this contract holds.
 import { JSDOM } from "jsdom";
@@ -24,19 +25,21 @@ function renderFixture() {
   const dom = new JSDOM(
     `
     <section data-testid="round">
-      <img src="mystery.jpg" alt="Mystery bird" />
-      <button data-testid="option" data-position="top" data-name="Azure-winged Magpie"></button>
-      <button data-testid="option" data-position="bottom" data-name="Eurasian Tree Sparrow"></button>
-      <button data-testid="option" data-position="left" data-name="Light-vented Bulbul"
-              data-correct="true"
-              data-feature="pale grey-white patch behind the eye"
-              data-notes="common in parks and gardens; noisy and gregarious, eats fruit and insects"></button>
-      <button data-testid="option" data-position="right" data-name="Oriental Magpie-Robin"></button>
-      <p data-testid="feedback"></p>
-      <div data-testid="reveal" role="button" tabindex="0" hidden>
-        <p data-testid="reveal-species"></p>
-        <p data-testid="reveal-feature"></p>
-        <p data-testid="reveal-notes"></p>
+      <div data-testid="screen-guess">
+        <img data-testid="mystery-photo" src="mystery.jpg" alt="Mystery bird" />
+        <button data-testid="option" data-position="top" data-name="Azure-winged Magpie"></button>
+        <button data-testid="option" data-position="bottom" data-name="Eurasian Tree Sparrow"></button>
+        <button data-testid="option" data-position="left" data-name="Light-vented Bulbul"
+                data-correct="true"
+                data-feature="pale grey-white patch behind the eye"
+                data-notes="common in parks and gardens; noisy and gregarious, eats fruit and insects"></button>
+        <button data-testid="option" data-position="right" data-name="Oriental Magpie-Robin"></button>
+      </div>
+      <div data-testid="screen-detail" role="button" tabindex="0" hidden>
+        <p data-testid="outcome"></p>
+        <p data-testid="detail-feature"></p>
+        <img data-testid="detail-photo" alt="" />
+        <p data-testid="detail-notes"></p>
       </div>
     </section>
   `,
@@ -52,65 +55,68 @@ function renderFixture() {
       document.querySelector<HTMLElement>(
         `[data-testid="option"][data-position="${position}"]`,
       )!,
-    feedback: document.querySelector<HTMLElement>('[data-testid="feedback"]')!,
-    reveal: document.querySelector<HTMLElement>('[data-testid="reveal"]')!,
+    guessScreen: document.querySelector<HTMLElement>('[data-testid="screen-guess"]')!,
+    detailScreen: document.querySelector<HTMLElement>('[data-testid="screen-detail"]')!,
+    outcome: document.querySelector<HTMLElement>('[data-testid="outcome"]')!,
+    detailFeature: document.querySelector<HTMLElement>('[data-testid="detail-feature"]')!,
+    detailNotes: document.querySelector<HTMLElement>('[data-testid="detail-notes"]')!,
+    detailPhoto: document.querySelector<HTMLImageElement>('[data-testid="detail-photo"]')!,
   };
 }
 
 describe("bird identification game", () => {
-  it("shows no feedback and keeps the reveal hidden before any choice", () => {
-    const { feedback, reveal } = renderFixture();
-    expect(feedback.textContent?.trim(), NEXT_STEP).toBe("");
-    expect(reveal.hidden).toBe(true);
+  it("shows the guess screen and keeps the detail screen hidden before any choice", () => {
+    const { guessScreen, detailScreen } = renderFixture();
+    expect(guessScreen.hidden, NEXT_STEP).toBe(false);
+    expect(detailScreen.hidden).toBe(true);
   });
 
-  it("shows positive feedback when the visitor taps the correct option", () => {
-    const { window, option, feedback, reveal } = renderFixture();
+  it("jumps to the detail screen with positive feedback when the visitor taps the correct option", () => {
+    const { window, option, guessScreen, detailScreen, outcome } = renderFixture();
     option("left").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    expect(feedback.textContent, NEXT_STEP).toContain("Nice!");
-    expect(reveal.hidden).toBe(true);
+    expect(guessScreen.hidden, NEXT_STEP).toBe(true);
+    expect(detailScreen.hidden).toBe(false);
+    expect(outcome.textContent).toContain("Nice!");
   });
 
-  it("reveals the correct species, its feature, and its notes on a wrong tap", () => {
-    const { window, option, reveal } = renderFixture();
+  it("jumps to the detail screen naming the correct species, its feature, its photo, and its notes on a wrong tap", () => {
+    const { window, option, detailScreen, outcome, detailFeature, detailNotes, detailPhoto } =
+      renderFixture();
     option("top").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    expect(reveal.hidden, NEXT_STEP).toBe(false);
-    expect(reveal.querySelector('[data-testid="reveal-species"]')?.textContent).toContain(
-      "Light-vented Bulbul",
-    );
-    expect(reveal.querySelector('[data-testid="reveal-feature"]')?.textContent).toContain(
-      "pale grey-white patch",
-    );
-    expect(reveal.querySelector('[data-testid="reveal-notes"]')?.textContent).toContain(
-      "common in parks",
-    );
+    expect(detailScreen.hidden, NEXT_STEP).toBe(false);
+    expect(outcome.textContent).toContain("Light-vented Bulbul");
+    expect(detailFeature.textContent).toContain("pale grey-white patch");
+    expect(detailNotes.textContent).toContain("common in parks");
+    expect(detailPhoto.src).toContain("mystery.jpg");
   });
 
   it("also accepts the correct answer via arrow key, so it works without a touchscreen (desktop)", () => {
-    const { window, round, feedback } = renderFixture();
+    const { window, round, detailScreen, outcome } = renderFixture();
     round.dispatchEvent(
       new window.KeyboardEvent("keydown", { bubbles: true, key: "ArrowLeft" }),
     );
-    expect(feedback.textContent, NEXT_STEP).toContain("Nice!");
+    expect(detailScreen.hidden, NEXT_STEP).toBe(false);
+    expect(outcome.textContent).toContain("Nice!");
   });
 
   it("also accepts the correct answer via swipe, so it works without a keyboard (phone)", () => {
-    const { window, round, feedback } = renderFixture();
+    const { window, round, detailScreen, outcome } = renderFixture();
     round.dispatchEvent(
       new window.PointerEvent("pointerdown", { bubbles: true, clientX: 200, clientY: 200 }),
     );
     round.dispatchEvent(
       new window.PointerEvent("pointerup", { bubbles: true, clientX: 0, clientY: 200 }),
     );
-    expect(feedback.textContent, NEXT_STEP).toContain("Nice!");
+    expect(detailScreen.hidden, NEXT_STEP).toBe(false);
+    expect(outcome.textContent).toContain("Nice!");
   });
 
-  it("dismisses the reveal on a tap, resetting for another guess — 'Next' is the reveal itself", () => {
-    const { window, option, reveal, feedback } = renderFixture();
+  it("returns to the guess screen on a tap anywhere on the detail screen — 'Next' is the detail screen itself", () => {
+    const { window, option, guessScreen, detailScreen } = renderFixture();
     option("top").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    expect(reveal.hidden).toBe(false);
-    reveal.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    expect(reveal.hidden, NEXT_STEP).toBe(true);
-    expect(feedback.textContent?.trim()).toBe("");
+    expect(detailScreen.hidden).toBe(false);
+    detailScreen.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    expect(detailScreen.hidden, NEXT_STEP).toBe(true);
+    expect(guessScreen.hidden).toBe(false);
   });
 });

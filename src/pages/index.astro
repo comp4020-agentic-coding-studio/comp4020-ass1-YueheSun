@@ -18,46 +18,51 @@ import mysteryBirdUrl from "../assets/mystery-bird.svg?url";
     </p>
 
     <section class="round" data-testid="round">
-      <div class="board">
-        <img
-          class="mystery-photo"
-          src={mysteryBirdUrl}
-          alt="Placeholder illustration of the mystery bird — real photos come next"
-        />
-        <button class="option option-top" data-testid="option" data-position="top" data-name="Eurasian Tree Sparrow">
-          Eurasian Tree Sparrow
-        </button>
-        <button
-          class="option option-left"
-          data-testid="option"
-          data-position="left"
-          data-name="House Sparrow"
-          data-correct="true"
-          data-feature="a plain grey crown with no black cheek spot"
-          data-notes="found around buildings worldwide; males have a black bib; noisy, gregarious flocks."
-        >
-          House Sparrow
-        </button>
-        <button class="option option-right" data-testid="option" data-position="right" data-name="Russet Sparrow">
-          Russet Sparrow
-        </button>
-        <button class="option option-bottom" data-testid="option" data-position="bottom" data-name="Eurasian Sparrowhawk">
-          Eurasian Sparrowhawk
-        </button>
-      </div>
+      <div class="stage">
+        <div class="screen screen-guess" data-testid="screen-guess">
+          <div class="board">
+            <img
+              class="mystery-photo"
+              data-testid="mystery-photo"
+              src={mysteryBirdUrl}
+              alt="Placeholder illustration of the mystery bird — real photos come next"
+              draggable="false"
+            />
+            <button class="option option-top" data-testid="option" data-position="top" data-name="Eurasian Tree Sparrow">
+              Eurasian Tree Sparrow
+            </button>
+            <button
+              class="option option-left"
+              data-testid="option"
+              data-position="left"
+              data-name="House Sparrow"
+              data-correct="true"
+              data-feature="a plain grey crown with no black cheek spot"
+              data-notes="found around buildings worldwide; males have a black bib; noisy, gregarious flocks."
+            >
+              House Sparrow
+            </button>
+            <button class="option option-right" data-testid="option" data-position="right" data-name="Russet Sparrow">
+              Russet Sparrow
+            </button>
+            <button class="option option-bottom" data-testid="option" data-position="bottom" data-name="Eurasian Sparrowhawk">
+              Eurasian Sparrowhawk
+            </button>
+          </div>
+        </div>
 
-      <p class="feedback" data-testid="feedback"></p>
-
-      <div class="reveal" data-testid="reveal" role="button" tabindex="0" hidden>
-        <p class="reveal-species" data-testid="reveal-species"></p>
-        <p class="reveal-feature" data-testid="reveal-feature"></p>
-        <p class="reveal-notes" data-testid="reveal-notes"></p>
-        <p class="reveal-hint">(tap anywhere here to try again)</p>
+        <div class="screen screen-detail" data-testid="screen-detail" role="button" tabindex="0" hidden>
+          <p class="detail-outcome" data-testid="outcome"></p>
+          <p class="detail-feature" data-testid="detail-feature"></p>
+          <img class="detail-photo" data-testid="detail-photo" alt="" draggable="false" />
+          <p class="detail-notes" data-testid="detail-notes"></p>
+          <p class="detail-hint">(tap anywhere to continue)</p>
+        </div>
       </div>
     </section>
 
     <p class="howto">
-      Tap a name, press an arrow key, or swipe toward it.
+      Tap a name, press an arrow key, or swipe toward it. Then tap anywhere to continue.
     </p>
   </main>
   <script>
