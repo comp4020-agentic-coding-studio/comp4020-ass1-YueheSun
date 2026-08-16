@@ -19,12 +19,22 @@ function photoUrl(slug: string): string {
 
 export type Position = "top" | "bottom" | "left" | "right";
 
+// Where the correct option's `feature` is actually visible in the photo, as a
+// percentage of the image's own width/height — not the display container's,
+// so this only lines up if the photo is shown at its natural aspect ratio
+// (see .detail-photo-wrap in global.css) rather than cropped with object-fit.
+export interface MarkerPosition {
+  x: number;
+  y: number;
+}
+
 export interface RoundOption {
   position: Position;
   name: string;
   correct?: true;
   feature?: string;
   notes?: string;
+  marker?: MarkerPosition;
 }
 
 export interface Round {
@@ -46,6 +56,7 @@ const roundDefs: Round[] = [
         correct: true,
         feature: "the white edge of its tail breaks into separate patches, not one continuous band",
         notes: "greyer overall than the Oriental Turtle Dove, with a higher-pitched call; common in parks, gardens, and farmland.",
+        marker: { x: 30, y: 80 },
       },
       { position: "right", name: "Oriental Turtle Dove" },
     ],
@@ -60,6 +71,7 @@ const roundDefs: Round[] = [
         correct: true,
         feature: "a plain white belly with just one wing bar",
         notes: "recently split from the Great Tit group; common in East Asian towns, gardens, and woodland edge.",
+        marker: { x: 54, y: 54 },
       },
       { position: "bottom", name: "Green-backed Tit" },
       { position: "left", name: "Yellow-bellied Tit" },
@@ -79,6 +91,7 @@ const roundDefs: Round[] = [
         correct: true,
         feature: "a large, obvious white wing patch and a sharp colour break between its head and back",
         notes: "a common winter visitor to East Asian gardens and parks, often perching in the open and flicking its tail.",
+        marker: { x: 22, y: 50 },
       },
     ],
   },
@@ -93,6 +106,7 @@ const roundDefs: Round[] = [
         correct: true,
         feature: "a slate-blue body with a red tail and no white wing patch at all",
         notes: "found along fast, rocky mountain streams, where it perches on wet boulders bobbing its tail.",
+        marker: { x: 72, y: 78 },
       },
       { position: "left", name: "White-capped Redstart" },
       { position: "right", name: "Blue Whistling Thrush" },
@@ -108,6 +122,7 @@ const roundDefs: Round[] = [
         correct: true,
         feature: "spotted wings and a red iris, where the Chinese Pond Heron shows plain white-edged wings and a yellowish-brown iris",
         notes: "an immature bird; roosts in trees by day and forages at dusk, unlike the day-active pond heron.",
+        marker: { x: 62, y: 16 },
       },
       { position: "bottom", name: "Chinese Pond Heron" },
       { position: "left", name: "Little Egret" },
@@ -124,6 +139,7 @@ const roundDefs: Round[] = [
         correct: true,
         feature: "yellow feet at the end of black legs, with yellow-green skin in front of the eye",
         notes: "the smallest of the four white egrets; shuffles its feet in shallow water to stir up prey.",
+        marker: { x: 50, y: 77 },
       },
       { position: "bottom", name: "Great Egret" },
       { position: "left", name: "Intermediate Egret" },
@@ -143,6 +159,7 @@ const roundDefs: Round[] = [
         correct: true,
         feature: "brown, not black, streaks on the breast and flanks",
         notes: "a winter visitor to farmland and scrub, usually foraging on the ground in small flocks.",
+        marker: { x: 31, y: 44 },
       },
     ],
   },
@@ -157,6 +174,7 @@ const roundDefs: Round[] = [
         correct: true,
         feature: "a dark throat, where the very similar Dusky Thrush shows a white one",
         notes: "forages on open ground and farmland in winter, often flocking together with Dusky Thrushes.",
+        marker: { x: 62, y: 36 },
       },
       { position: "left", name: "Dusky Thrush" },
       { position: "right", name: "Grey-backed Thrush" },
@@ -172,6 +190,7 @@ const roundDefs: Round[] = [
         correct: true,
         feature: "strong, dark streaking on the breast and flanks, where the Water Pipit shows little or none",
         notes: "common along woodland edges and in parks; walks rather than hops, bobbing its tail.",
+        marker: { x: 52, y: 55 },
       },
       { position: "bottom", name: "Water Pipit" },
       { position: "left", name: "Richard's Pipit" },
@@ -188,6 +207,7 @@ const roundDefs: Round[] = [
         correct: true,
         feature: "very bold white cheeks against a black head — Coal Tit's pattern is more compact, Grey-crested Tit's cheeks are dirty white",
         notes: "found in coniferous forest at higher elevations, often moving through mixed foraging flocks.",
+        marker: { x: 42, y: 36 },
       },
       { position: "bottom", name: "Coal Tit" },
       { position: "left", name: "Grey-crested Tit" },
@@ -207,6 +227,7 @@ const roundDefs: Round[] = [
         correct: true,
         feature: "a head covered in small spots, rather than fine horizontal bars",
         notes: "a small, day-active owl, often mobbed by songbirds when found roosting in the open.",
+        marker: { x: 39, y: 12 },
       },
     ],
   },
@@ -221,6 +242,7 @@ const roundDefs: Round[] = [
         correct: true,
         feature: "an orange-red lower bill — the male's bill is all black",
         notes: "perches over still or slow water, diving headfirst for small fish; both sexes are the same size and colour otherwise.",
+        marker: { x: 56, y: 34 },
       },
       { position: "left", name: "Male Common Kingfisher" },
       { position: "right", name: "White-throated Kingfisher" },

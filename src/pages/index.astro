@@ -18,44 +18,57 @@ import { rounds, roundPhotoUrl } from "../data/rounds";
     </p>
 
     {
-      rounds.map((round, index) => (
-        <section class="round" data-testid="round" hidden={index !== 0}>
-          <div class="stage">
-            <div class="screen screen-guess" data-testid="screen-guess">
-              <div class="board">
-                <img
-                  class="mystery-photo"
-                  data-testid="mystery-photo"
-                  src={roundPhotoUrl(round)}
-                  alt="Mystery bird — guess before revealing"
-                  draggable="false"
-                />
-                {round.options.map((option) => (
-                  <button
-                    class={`option option-${option.position}`}
-                    data-testid="option"
-                    data-position={option.position}
-                    data-name={option.name}
-                    data-correct={option.correct ? "true" : undefined}
-                    data-feature={option.feature}
-                    data-notes={option.notes}
-                  >
-                    {option.name}
-                  </button>
-                ))}
+      rounds.map((round, index) => {
+        const correct = round.options.find((option) => option.correct);
+        const marker = correct?.marker;
+        return (
+          <section class="round" data-testid="round" hidden={index !== 0}>
+            <div class="stage">
+              <div class="screen screen-guess" data-testid="screen-guess">
+                <div class="board">
+                  <img
+                    class="mystery-photo"
+                    data-testid="mystery-photo"
+                    src={roundPhotoUrl(round)}
+                    alt="Mystery bird — guess before revealing"
+                    draggable="false"
+                  />
+                  {round.options.map((option) => (
+                    <button
+                      class={`option option-${option.position}`}
+                      data-testid="option"
+                      data-position={option.position}
+                      data-name={option.name}
+                      data-correct={option.correct ? "true" : undefined}
+                      data-feature={option.feature}
+                      data-notes={option.notes}
+                    >
+                      {option.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div class="screen screen-detail" data-testid="screen-detail" role="button" tabindex="0" hidden>
+                <p class="detail-outcome" data-testid="outcome" />
+                <p class="detail-feature" data-testid="detail-feature" />
+                <div class="detail-photo-wrap">
+                  <img class="detail-photo" data-testid="detail-photo" alt="" draggable="false" />
+                  {marker && (
+                    <span
+                      class="detail-marker"
+                      aria-hidden="true"
+                      style={`left: ${marker.x}%; top: ${marker.y}%;`}
+                    />
+                  )}
+                </div>
+                <p class="detail-notes" data-testid="detail-notes" />
+                <p class="detail-hint">(tap anywhere to continue)</p>
               </div>
             </div>
-
-            <div class="screen screen-detail" data-testid="screen-detail" role="button" tabindex="0" hidden>
-              <p class="detail-outcome" data-testid="outcome" />
-              <p class="detail-feature" data-testid="detail-feature" />
-              <img class="detail-photo" data-testid="detail-photo" alt="" draggable="false" />
-              <p class="detail-notes" data-testid="detail-notes" />
-              <p class="detail-hint">(tap anywhere to continue)</p>
-            </div>
-          </div>
-        </section>
-      ))
+          </section>
+        );
+      })
     }
 
     <div class="screen-complete" data-testid="complete" role="button" tabindex="0" hidden>

@@ -118,9 +118,6 @@ a {
 
 .mystery-photo,
 .detail-photo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   border-radius: 0.75rem;
   border: 1px solid #ccc;
   -webkit-user-drag: none;
@@ -128,6 +125,9 @@ a {
 }
 
 .mystery-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   grid-column: 2;
   grid-row: 2;
 }
@@ -189,9 +189,52 @@ a {
   margin: 0 0 0.75rem;
 }
 
-.detail-photo {
+.detail-photo-wrap {
+  position: relative;
   max-width: 16rem;
   margin: 0 auto 0.75rem;
+}
+
+.detail-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Percentage left/top come from each round's marker coordinates (rounds.ts),
+   measured against the photo's own natural size — this only lines up because
+   .detail-photo is shown at its natural aspect ratio (width: 100%; height:
+   auto), never cropped, so "40% across the image" means the same point at
+   any display size. */
+.detail-marker {
+  position: absolute;
+  width: 2rem;
+  height: 2rem;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 3px solid #fc3;
+  box-shadow: 0 0 0 2px rgb(0 0 0 / 35%);
+  pointer-events: none;
+  animation: marker-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes marker-pulse {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 0.75;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail-marker {
+    animation: none;
+  }
 }
 
 .detail-notes {
