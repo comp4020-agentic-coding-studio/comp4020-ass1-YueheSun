@@ -139,6 +139,30 @@ means building legibly is part of building well.
   real judgment call (rejected the agent's first approach, added a rule to this
   file, caught something with a check), add the `PROCESS.md` entry then, while
   the why is still fresh, rather than reconstructing it all at the end.
+- **What counts as a harness-level correction, for this repo.** The brief
+  ranks "a rule added to `CLAUDE.md`, a check wired up, an attempt thrown away"
+  above "retry until it passes." Concretely: the fix has to change what future
+  work is checked against or aimed at, not just produce a different output
+  under the same standard. A verbal pivot ("let's do X instead of Y") only
+  counts once it lands in something durable — a test that now asserts the new
+  contract, a rule here that would actually stop the old mistake recurring, or
+  a commit that visibly discards a real attempt. A correction inherited from a
+  previous week's harness (a check already in the repo before this deliverable
+  started) is context, not an A1-original moment — don't cite it as one of
+  this deliverable's three or four.
+- **Citation integrity.** Cite the commit where the harness artefact itself
+  changed — the diff a marker opens has to show the claim, not predate it. A
+  commit whose code still reflects the old approach, offered as evidence of
+  the new decision, reads as "record contradicts claims" (the rubric's
+  explicit N-band failure), even if the commit message describes the new
+  decision accurately.
+- **Keep a running candidate log.** Claude: after any commit that might be one
+  of these moments, append a short raw entry to `process-notes.md` (repo root,
+  not part of the deployed site, not itself graded) — what happened, the
+  correction, the commit hash — right away, without waiting to be asked. I'll
+  curate the final three or four into `PROCESS.md` before shipping, so leave
+  `process-notes.md` uncited from `PROCESS.md` and don't treat its leftovers
+  as evidence in their own right.
 - **Write your reflection in `reflections/`** --- a short markdown file in this
   repo, named for the deliverable it answers, so the number in the filename is
   the number in this repo's name (`crit-1.md` in `comp4020-crit1-<you>`,
