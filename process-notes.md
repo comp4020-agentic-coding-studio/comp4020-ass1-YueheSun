@@ -188,17 +188,30 @@ the specific marker point checked — not audited for every other claim in their
 ### Turned the previous entry's one-off marker check into a wired-up, repeatable one
 
 **What happened:** the previous entry's marker verification was a one-time
-manual pass — I looked, found 3 bad photos, fixed them, and the process left
-no trace that could catch the next mistake. Asked directly whether that could
-become "a check wired up" instead of just a process note. Talked through what
-part of "does the marker land on the right feature" is actually mechanical
-(coordinate in `[0,100]`, photo file exists — checkable by `vitest`/CI) versus
-semantic (does the marked pixel show the claimed feature — only checkable by
-looking at the image, and there's no vision model in the CI/test environment
-to do that for you). Rejected wiring a live vision-API call into the check
-itself: it would need a committed secret, adds cost and non-determinism to
-`pnpm check`, and a pass wouldn't actually prove content correctness, just
-create false confidence that it had been checked.
+manual pass — I looked, found 3 of 12 photos didn't show their claimed
+feature, fixed them, and the process left no trace that could catch the next
+mistake. That "3 of 12" result is the actual signal here: it means the risk of
+a mislabeled marker isn't a one-off, it's structural — it'll recur every time
+a round's photo or coordinates change, with nothing forcing a re-check. Asked
+directly whether that could become "a check wired up" instead of just a
+process note.
+
+**The pushback that shaped the design:** I proposed a two-tier split —
+mechanical bounds test in `vitest`/CI, human-reviewed contact sheet for the
+semantic part — and explained there's no vision model in the CI/test
+environment to judge pixel content. Pushback: since the correction I'd just
+made *did* rely on a semantic judgment about image content, could that
+judgment be built into the workflow itself — a machine pass first, human
+review after? My answer: technically yes, a script could call the Claude API
+with the composited image plus the round's `feature` text and ask for a
+match/no-match verdict, flagging uncertain ones. I recommended against wiring
+that into the repo's checks: it needs a live API key present at runtime with
+nowhere safe to keep it committed (this repo's whole secrets sensor exists to
+keep keys out of tracked files), it's non-deterministic and costs money on
+every CI run, and a confident-but-wrong verdict is worse than no verdict at
+all, since a green check here would get trusted the same way `pnpm check` is.
+That's a bigger, riskier harness change than the actual problem — 12 photos,
+checked once — justifies. No pushback on that; built the two-tier version.
 
 **What got built instead of the obvious thing:** the obvious move would have
 stopped at "remember to look next time." Instead: (1) `src/data/rounds.test.ts`
