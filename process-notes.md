@@ -290,3 +290,47 @@ mislabeled identically in both places (attribution copied from a wrongly-IDed
 Commons file, matching a round name that was written to match). That failure
 mode still depends entirely on the human-eye pass, same as feature placement
 always has.
+
+---
+
+### Retired tap-anywhere-to-advance on the detail screen after a usability report, and rewrote the spec test to assert the opposite of what it used to
+
+**What happened:** the detail screen's "Next" affordance had been the whole
+screen — any tap on the photo, the notes, anywhere — since the crit2-era
+interaction pivot (`ed8421d`, logged above). Reported as too easy to trigger
+by accident: reading the feature/notes text and misjudging a tap boundary
+would skip straight to the next round. Replaced it with a single dedicated
+`<button data-testid="detail-next">Next</button>`; removed the
+`role="button" tabindex="0"` and click listener from `screen-detail` itself.
+
+**Not just a UI tweak — the check that defines "done" flipped its own
+polarity:** `spec/interaction.test.ts` previously had a test literally titled
+"returns to the guess screen on a tap anywhere on the detail screen — 'Next'
+is the detail screen itself," asserting that a click on `detailScreen`
+advances. Renamed/retargeted that test to click `detailNext` instead, and
+added a new one asserting the reverse of the old contract: a click on
+`detailScreen` (not the button) must leave the detail screen showing. Same
+file, same suite, now enforcing the opposite behaviour from before — this is
+the "check itself changed shape" bar the harness rules ask for, not a
+same-standard retry.
+
+**How I knew it was right:** `pnpm check` green at 72/72 (interaction spec +
+`rounds.test.ts` unaffected). Playwright wasn't launchable out of the box in
+this environment (missing `libnspr4`/NSS shared libs, no passwordless sudo to
+install them) — found already-extracted `.deb` contents under
+`/tmp/pwlibs/extracted` from an earlier setup step and pointed
+`LD_LIBRARY_PATH` at them instead of giving up on real-browser verification.
+Drove the built `pnpm preview` site (mind the configured `base`,
+`/comp4020-ass1-YueheSun/`, or requests 404) at both 1920×1080 and 390×844:
+confirmed clicking elsewhere on the detail screen no longer advances, the
+button does, and the button renders correctly (blue fill, no horizontal
+overflow on phone — checked `scrollWidth === innerWidth` directly, not just
+eyeballed a screenshot, since a mid-animation screenshot briefly looks
+truncated for reasons unrelated to layout).
+
+**Citation:** [`53ea586`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/53ea586)
+
+**Caution:** the same "tap anywhere" pattern still exists on the
+complete/restart screen (`.screen-complete`, "tap anywhere to restart") —
+explicitly out of scope for this pass, not yet reported as a problem, and not
+fixed here.
