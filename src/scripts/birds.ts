@@ -40,7 +40,7 @@ function setEntry(screen: HTMLElement, entryClass: string): void {
   screen.classList.add(entryClass);
 }
 
-function wireRound(round: HTMLElement): void {
+function wireRound(round: HTMLElement, onAdvance: () => void): void {
   const options = Array.from(
     round.querySelectorAll<HTMLElement>('[data-testid="option"]'),
   );
@@ -81,6 +81,7 @@ function wireRound(round: HTMLElement): void {
     setEntry(guessScreen!, lastEntry);
     detailScreen!.hidden = true;
     guessScreen!.hidden = false;
+    onAdvance();
   }
 
   function choose(position: Direction): void {
@@ -98,6 +99,12 @@ function wireRound(round: HTMLElement): void {
   // focused by default, so a round-scoped listener would silently miss
   // every key press until the visitor happened to click something first.
   doc.addEventListener("keydown", (event) => {
+    // Every round in a multi-round page wires its own document-level
+    // listener, so a listener whose round isn't the one currently on screen
+    // (hidden by initBirdGame's round-to-round advance) must ignore the
+    // event — otherwise every not-yet-reached round would react to the same
+    // key press at once.
+    if (round.hidden) return;
     const key = (event as KeyboardEvent).key;
     if (isGuessing()) {
       const direction = ARROW_TO_DIRECTION[key];
@@ -109,12 +116,12 @@ function wireRound(round: HTMLElement): void {
 
   let swipeStart: { x: number; y: number } | null = null;
   doc.addEventListener("pointerdown", (event) => {
-    if (!isGuessing()) return;
+    if (round.hidden || !isGuessing()) return;
     const { clientX, clientY } = event as PointerEvent;
     swipeStart = { x: clientX, y: clientY };
   });
   doc.addEventListener("pointerup", (event) => {
-    if (!swipeStart) return;
+    if (round.hidden || !swipeStart) return;
     const { clientX, clientY } = event as PointerEvent;
     const direction = directionFromSwipe(clientX - swipeStart.x, clientY - swipeStart.y);
     swipeStart = null;
@@ -125,7 +132,46 @@ function wireRound(round: HTMLElement): void {
 }
 
 export function initBirdGame(root: Document): void {
-  for (const round of root.querySelectorAll<HTMLElement>('[data-testid="round"]')) {
-    wireRound(round);
+  const rounds = Array.from(root.querySelectorAll<HTMLElement>('[data-testid="round"]'));
+  const complete = root.querySelector<HTMLElement>('[data-testid="complete"]');
+  let current = 0;
+
+  function showRound(index: number): void {
+    rounds.forEach((round, i) => {
+      round.hidden = i !== index;
+    });
+    if (complete) complete.hidden = true;
   }
+
+  function showComplete(): void {
+    rounds.forEach((round) => {
+      round.hidden = true;
+    });
+    if (complete) complete.hidden = false;
+  }
+
+  function restart(): void {
+    current = 0;
+    showRound(current);
+  }
+
+  for (const round of rounds) {
+    wireRound(round, () => {
+      current += 1;
+      if (current >= rounds.length) {
+        showComplete();
+      } else {
+        showRound(current);
+      }
+    });
+  }
+
+  if (rounds.length > 0) showRound(current);
+
+  complete?.addEventListener("click", restart);
+  root.addEventListener("keydown", (event) => {
+    if (!complete || complete.hidden) return;
+    const key = (event as KeyboardEvent).key;
+    if (key === "Enter" || key === " ") restart();
+  });
 }

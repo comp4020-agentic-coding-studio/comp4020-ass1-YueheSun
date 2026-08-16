@@ -23,9 +23,8 @@ A round:
    `<species>`." naming the correct answer), then the **one** feature that
    actually distinguishes it, then the mystery photo again (now captioned),
    then one short line of habitat/behaviour context underneath. The jump
-   between screens is a swipe-style page transition, always the same
-   direction (not mirroring which option/swipe direction the visitor picked —
-   simplest thing that still reads as "a page turned").
+   between screens is a swipe-style page transition that mirrors the
+   direction of the swipe/keypress that triggered it (see "Resolved" below).
 4. A "Next" action — tapping (or Enter/Space) anywhere on the detail screen,
    no separate button — advances to the next round. After the last round: a
    plain "that's all of them — play again?" state that resets to round 1. No
@@ -35,7 +34,10 @@ That's the whole app. One page, one state machine, one dataset.
 
 ## Minimum content this needs to exist at all
 
-- **4–5 rounds.** Each round needs exactly:
+- **12 rounds — one per comparison group in `data.md`.** Originally scoped
+  as "4–5 rounds" (see "Explicitly cut" below); superseded once asked to turn
+  the whole of `data.md` into the game rather than a sample of it. Each round
+  needs exactly:
   - one photo (the mystery bird) — this is the only place a photo is
     required; the three decoy option buttons are text-only, no image. It's
     reused as the detail-screen image too, so it must be a representative
@@ -45,19 +47,24 @@ That's the whole app. One page, one state machine, one dataset.
   - its one distinguishing feature (a phrase, not a paragraph)
   - one short habitat/behaviour line
   - three decoy species names (plausible confusables, no other data needed)
-- Species: drawn from the Chinese-bird feature notes already recorded.
-  Photos are the one missing ingredient — need one per round, sourced before
-  build starts (iNaturalist, properly licensed, or self-supplied).
-- No build-time API calls, no live fetch — everything baked into one small
-  local data file (name/photo path/feature/notes/decoys per round), same
-  shape as the fixture already driving `spec/interaction.test.ts`.
+- Species: drawn from the Chinese-bird feature notes already recorded in
+  `data.md`. Photos sourced from Wikimedia Commons via Wikipedia's page-summary
+  API (1280px renditions, all CC-licensed), credited in
+  `src/assets/birds/ATTRIBUTION.md`.
+- No build-time API calls, no live fetch — everything baked into
+  `src/data/rounds.ts` (name/photo slug/feature/notes/decoys per round), same
+  attribute shape as the fixture already driving `spec/interaction.test.ts`;
+  `index.astro` maps over it at build time to emit one `.round` section per
+  entry.
 
 ## Explicitly cut (add back only if the above ships with time to spare)
 
 - Any second page, route, or "browse all species" view
 - A score tally, timer, difficulty levels, or multiple game modes
 - Photos for the decoy options — never shown, never needed
-- More than ~5 rounds — this is a mechanic to feel, not a catalogue
+- ~~More than ~5 rounds~~ — superseded: all 12 of `data.md`'s comparison
+  groups are now rounds, since the whole dataset was the point once asked to
+  build from it rather than a sample of it.
 - Background music beyond a single looping ambient track with a mute toggle
   — decorative, unrelated to round outcome, first thing to drop if time runs
   short
@@ -65,15 +72,21 @@ That's the whole app. One page, one state machine, one dataset.
 
 ## Where this lands in the existing scaffold
 
-- `src/pages/index.astro` — the one page; round markup replaces the current
-  starter intro.
-- `src/scripts/birds.ts` — `initBirdGame()` already stubbed against
-  `spec/interaction.test.ts`'s contract (fixture: one `[data-testid="round"]`,
-  four `[data-testid="option"]`s, one carrying `data-correct`, a `feedback`
-  and a `reveal` element). Implementation just needs to generalize the fixture
-  shape to a sequence of rounds plus the "Next" advance.
-- Round data: a small local array (or JSON), one entry per round, matching
-  the fixture's attributes.
+- `src/pages/index.astro` — the one page; maps over `rounds` from
+  `src/data/rounds.ts` to emit one `.round` section per entry (12 currently),
+  plus a single `[data-testid="complete"]` end screen.
+- `src/scripts/birds.ts` — `initBirdGame()` wires each `.round` exactly like
+  the single-round `spec/interaction.test.ts` fixture (unchanged contract:
+  `data-correct`/`data-feature`/`data-notes` on one option, per-round
+  guess↔detail toggle), then chains them: each round's "Next" advances to the
+  next round, or to the complete screen after the last one, which resets back
+  to round 1 on tap/Enter/Space. Every round wires its own document-level
+  keydown/pointer listeners, so each one checks `round.hidden` first — without
+  that guard, every not-yet-reached round would react to the same key press
+  or swipe as the one currently on screen.
+- Round data: `src/data/rounds.ts` — one entry per round (photo slug, correct
+  name/feature/notes, three decoy names), matching the fixture's attributes.
+  Photos are pulled in via `import.meta.glob` over `src/assets/birds/*.jpg`.
 
 ## Resolved
 
@@ -113,8 +126,22 @@ That's the whole app. One page, one state machine, one dataset.
   `.board`. Both bugs passed the jsdom spec tests because jsdom dispatches
   synthetic events directly with no focus or gesture semantics attached, which
   is exactly why they went unnoticed until tested on a real page/device.
+- **Groups in `data.md` with fewer than 4 named species get invented-but-real
+  decoy names.** Most groups name only 2–3 confusable species; the fourth (and
+  sometimes third) option button in those rounds is filled with another real,
+  plausible confusable from the same genus/region that `data.md` doesn't
+  mention (e.g. "Eurasian Collared Dove" alongside the Spotted/Oriental Turtle
+  Dove pair) — never an invented species, just one `data.md` didn't cover.
+- **The Common Kingfisher round is a sex-ID case, not a species-ID one** —
+  `data.md`'s group 12 distinguishes male from female by bill colour, not one
+  species from another. Kept it as a round anyway (dropping it would silently
+  cut a real chunk of the source content) by making the four options "Female
+  Common Kingfisher" / "Male Common Kingfisher" plus two genuinely different
+  decoy species (Pied Kingfisher, White-throated Kingfisher). The mechanic
+  doesn't require the four options to be four different species, only four
+  plausible labels with one correct answer, so this fits without changing
+  `birds.ts` or the spec contract.
 
 ## Open before building
 
-- Exact species/photo list for the 4–5 rounds (need photos — see above)
 - The specific ambient loop (self-recorded clip vs. a few Web-Audio-API notes)
