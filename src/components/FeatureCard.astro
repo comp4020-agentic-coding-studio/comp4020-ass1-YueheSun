@@ -1,0 +1,51 @@
+---
+// Renders one species' feature card: name, italic Latin name, its photo
+// with every data.md-listed feature circled and numbered, a margin column
+// of matching numbered labels (the leader line connecting each pair is
+// drawn at runtime by ../scripts/leader-lines.ts, since circle and label
+// live in different coordinate spaces), a habits/habitat note, and — for a
+// confusable card — the comparison note explaining how to tell it apart
+// from the round's primary species.
+import { photoUrl } from "../data/round-photos";
+import type { SpeciesCard } from "../data/rounds";
+
+interface Props {
+  card: SpeciesCard;
+  comparisonNote?: string;
+}
+
+const { card, comparisonNote } = Astro.props;
+---
+
+<div class="feature-card">
+  <p class="feature-name">{card.name}</p>
+  <p class="feature-latin">{card.latinName}</p>
+  <div class="annotated-photo">
+    <div class="annotated-photo-frame">
+      <img class="feature-photo" src={photoUrl(card.photoSlug)} alt={card.name} draggable="false" />
+      <svg class="annotation-lines" aria-hidden="true">
+        {card.annotations.map((_, i) => (
+          <>
+            <line class="annotation-line-halo" data-annotation-index={i} />
+            <line class="annotation-line-stroke" data-annotation-index={i} />
+          </>
+        ))}
+      </svg>
+      {card.annotations.map((a, i) => (
+        <span class="annotation-circle" data-annotation-index={i} style={`left:${a.x}%; top:${a.y}%;`}>
+          {i + 1}
+        </span>
+      ))}
+    </div>
+    <div class="annotation-labels">
+      {card.annotations.map((a, i) => (
+        <p class="annotation-label" data-annotation-index={i}>
+          <span class="annotation-label-index">{i + 1}</span>
+          {a.label}
+        </p>
+      ))}
+    </div>
+  </div>
+  <p class="feature-notes">{card.notes}</p>
+  {comparisonNote && <p class="comparison-note">{comparisonNote}</p>}
+</div>

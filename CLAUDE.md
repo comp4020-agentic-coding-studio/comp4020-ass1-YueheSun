@@ -97,32 +97,44 @@ CI machine, not proof the site is fast for real users.
 
 ## Verifying detail-photo markers (and species)
 
-Each round's detail screen draws a marker at a stored `x`/`y` percentage
-(`src/data/rounds.ts`) over the round's photo, pointing at the feature named in
-its `feature` text --- and that photo is supposed to be of the species the
-round claims. `src/data/rounds.test.ts` checks what's mechanical --- every
-marker is within `[0, 100]`, every round's photo file exists, and
-`ATTRIBUTION.md`'s recorded species text for that file actually names the
-round's species (so a swapped photo whose attribution row didn't get updated
-fails loudly) --- but it can't check the thing that actually matters: whether
-the ring lands on the right part of the *image*, and whether the image is
-even of the right *bird*. Both are claims about pixel content, and no test in
-this repo, and no vision model in the CI environment, can judge them. It's a
-human-eye check, so make it a repeatable one instead of a one-off:
+Each round's detail screen shows a "primary" feature card (the correct
+species) and one or more "confusable" feature cards (species it's genuinely
+confused with) --- each card's photo gets **every** feature `data.md` lists
+for that species circled and numbered (`annotations` on a `SpeciesCard` /
+`ConfusableCard` in `src/data/rounds.ts`), not just one. That photo is also
+supposed to be of the species the card claims. `src/data/rounds.test.ts`
+checks what's mechanical --- every annotation's `x`/`y` is within `[0, 100]`,
+every card's photo file exists, and `ATTRIBUTION.md`'s recorded species text
+for that file actually names the card's species (so a swapped photo whose
+attribution row didn't get updated fails loudly) --- but it can't check the
+thing that actually matters: whether each numbered ring lands on the right
+part of the *image*, and whether the image is even of the right *bird*. Both
+are claims about pixel content, and no test in this repo, and no vision model
+in the CI environment, can judge them. It's a human-eye check, so make it a
+repeatable one instead of a one-off:
 
-- Run `pnpm verify:markers` after adding or changing any round's photo or
-  marker coordinates. It composites each round's stored marker onto its actual
-  source photo and writes the result to `.previews/markers/` (gitignored ---
-  never commit these images, and never treat their presence as a substitute
-  for having looked at them), printing the claimed species and feature next
-  to each file.
-- Open every file it wrote and confirm two things: the ring sits on the
-  feature quoted next to it, and the photo actually shows the species named
-  next to it --- not just something plausible at a glance.
-- Do this **before** committing that round's change. A photo/marker commit
+- Run `pnpm verify:markers` after adding or changing any card's photo or
+  annotation coordinates. It composites every one of a card's annotations as
+  numbered rings onto its actual source photo and writes one preview file per
+  card to `.previews/markers/` (gitignored --- never commit these images, and
+  never treat their presence as a substitute for having looked at them),
+  named `{round.id}-primary.jpg` or `{round.id}-confusable-{photoSlug}.jpg`,
+  printing the claimed species, Latin name, and each numbered label next to
+  each file.
+- Open every file it wrote and confirm two things: each numbered ring sits on
+  the feature its label claims, and the photo actually shows the species
+  named next to it --- not just something plausible at a glance.
+- Do this **before** committing that card's change. A photo/annotation commit
   made without running this is the same mistake `752ab25` caught by luck, not
   by process --- three of twelve markers were pointing at the wrong spot until
   someone looked.
+- **Not covered by this script**: the leader line connecting each ring to its
+  label (drawn at runtime by `src/scripts/leader-lines.ts`) and the
+  confusable-species dropdown switcher. Both depend on real layout
+  (`ResizeObserver`-driven), so `verify:markers`'s pixels-only composite can't
+  exercise them --- check those with a real rendered-page pass (`agent-browser`
+  or equivalent) at both graded viewports before committing any round that
+  touches the card layout.
 
 ## The stack is swappable
 
