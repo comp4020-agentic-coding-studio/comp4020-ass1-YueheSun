@@ -1,7 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import FeatureCard from "../components/FeatureCard.astro";
 import { rounds } from "../data/rounds";
-import { roundPhotoUrl } from "../data/round-photos";
+import { photoUrl } from "../data/round-photos";
 ---
 
 <Layout title="Spot the Difference: Bird Edition">
@@ -14,65 +15,83 @@ import { roundPhotoUrl } from "../data/round-photos";
     <h1>Spot the Difference: Bird Edition</h1>
     <p class="intro">
       You keep misidentifying these look-alikes because you're looking at the
-      wrong feature. Guess the bird, then see the one mark that actually
-      gives it away.
+      wrong feature. Guess the bird, then see every feature that actually
+      gives it away — and how it compares to the species it's most often
+      confused with.
     </p>
 
     {
-      rounds.map((round, index) => {
-        const correct = round.options.find((option) => option.correct);
-        const marker = correct?.marker;
-        return (
-          <section class="round" data-testid="round" hidden={index !== 0}>
-            <div class="stage">
-              <div class="screen screen-guess" data-testid="screen-guess">
-                <div class="board">
-                  <button class="back-question" data-testid="back-question" type="button">
-                    Back to previous question
+      rounds.map((round, index) => (
+        <section class="round" data-testid="round" hidden={index !== 0}>
+          <div class="stage">
+            <div class="screen screen-guess" data-testid="screen-guess">
+              <div class="board">
+                <button class="back-question" data-testid="back-question" type="button">
+                  Back to previous question
+                </button>
+                <img
+                  class="mystery-photo"
+                  data-testid="mystery-photo"
+                  src={photoUrl(round.primary.photoSlug)}
+                  alt="Mystery bird — guess before revealing"
+                  draggable="false"
+                />
+                {round.options.map((option) => (
+                  <button
+                    class={`option option-${option.position}`}
+                    data-testid="option"
+                    data-position={option.position}
+                    data-name={option.name}
+                    data-correct={option.correct ? "true" : undefined}
+                  >
+                    {option.name}
                   </button>
-                  <img
-                    class="mystery-photo"
-                    data-testid="mystery-photo"
-                    src={roundPhotoUrl(round)}
-                    alt="Mystery bird — guess before revealing"
-                    draggable="false"
-                  />
-                  {round.options.map((option) => (
-                    <button
-                      class={`option option-${option.position}`}
-                      data-testid="option"
-                      data-position={option.position}
-                      data-name={option.name}
-                      data-correct={option.correct ? "true" : undefined}
-                      data-feature={option.feature}
-                      data-notes={option.notes}
-                    >
-                      {option.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div class="screen screen-detail" data-testid="screen-detail" hidden>
-                <p class="detail-outcome" data-testid="outcome" />
-                <p class="detail-feature" data-testid="detail-feature" />
-                <div class="detail-photo-wrap">
-                  <img class="detail-photo" data-testid="detail-photo" alt="" draggable="false" />
-                  {marker && (
-                    <span
-                      class="detail-marker"
-                      aria-hidden="true"
-                      style={`left: ${marker.x}%; top: ${marker.y}%;`}
-                    />
-                  )}
-                </div>
-                <p class="detail-notes" data-testid="detail-notes" />
-                <button class="detail-next" data-testid="detail-next" type="button">Next</button>
+                ))}
               </div>
             </div>
-          </section>
-        );
-      })
+
+            <div class="screen screen-detail" data-testid="screen-detail" hidden>
+              <div class="detail-header">
+                <p class="detail-outcome" data-testid="outcome" />
+                <button class="detail-next detail-next-top" data-testid="detail-next" type="button">
+                  Next
+                </button>
+              </div>
+
+              <section class="panel panel-answer">
+                <FeatureCard card={round.primary} />
+              </section>
+
+              <section class="panel panel-confusable">
+                <div class="confusable-section">
+                  {round.confusables.length > 1 ? (
+                    <select
+                      class="confusable-select"
+                      data-testid="confusable-select"
+                      aria-label="Compare with a similar-looking species"
+                    >
+                      {round.confusables.map((confusable, i) => (
+                        <option value={i}>{confusable.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p class="confusable-label">Often confused with:</p>
+                  )}
+                  {round.confusables.map((confusable, i) => (
+                    <div class="feature-card-panel" data-testid="confusable-panel" hidden={i !== 0}>
+                      <FeatureCard card={confusable} comparisonNote={confusable.comparisonNote} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <button class="detail-next detail-next-bottom" data-testid="detail-next" type="button">
+                Next
+              </button>
+            </div>
+          </div>
+        </section>
+      ))
     }
 
     <div class="screen-complete" data-testid="complete" role="button" tabindex="0" hidden>
@@ -86,6 +105,8 @@ import { roundPhotoUrl } from "../data/round-photos";
   </main>
   <script>
     import { initBirdGame } from "../scripts/birds";
+    import { wireLeaderLines } from "../scripts/leader-lines";
     initBirdGame(document);
+    wireLeaderLines(document);
   </script>
 </Layout>

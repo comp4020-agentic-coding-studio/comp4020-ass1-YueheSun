@@ -48,20 +48,10 @@ function wireRound(round: HTMLElement, onAdvance: () => void): void {
   const guessScreen = round.querySelector<HTMLElement>('[data-testid="screen-guess"]');
   const detailScreen = round.querySelector<HTMLElement>('[data-testid="screen-detail"]');
   const outcome = round.querySelector<HTMLElement>('[data-testid="outcome"]');
-  const detailFeature = round.querySelector<HTMLElement>('[data-testid="detail-feature"]');
-  const detailNotes = round.querySelector<HTMLElement>('[data-testid="detail-notes"]');
-  const detailPhoto = round.querySelector<HTMLImageElement>('[data-testid="detail-photo"]');
-  const mysteryPhoto = round.querySelector<HTMLImageElement>('[data-testid="mystery-photo"]');
-  const detailNext = round.querySelector<HTMLElement>('[data-testid="detail-next"]');
-  if (
-    !correct ||
-    !guessScreen ||
-    !detailScreen ||
-    !outcome ||
-    !detailFeature ||
-    !detailNotes ||
-    !detailNext
-  ) {
+  const detailNextButtons = Array.from(
+    round.querySelectorAll<HTMLElement>('[data-testid="detail-next"]'),
+  );
+  if (!correct || !guessScreen || !detailScreen || !outcome || detailNextButtons.length === 0) {
     return;
   }
 
@@ -70,13 +60,9 @@ function wireRound(round: HTMLElement, onAdvance: () => void): void {
   let lastEntry: string = DIRECTION_TO_ENTRY.right;
 
   function showDetail(isCorrect: boolean, direction: Direction): void {
-    outcome!.textContent = isCorrect ? "Nice!" : `So close! It's the ${correct!.dataset.name}.`;
-    detailFeature!.textContent = correct!.dataset.feature ?? "";
-    detailNotes!.textContent = correct!.dataset.notes ?? "";
-    if (detailPhoto && mysteryPhoto) {
-      detailPhoto.src = mysteryPhoto.src;
-      detailPhoto.alt = `${correct!.dataset.name} — showing ${correct!.dataset.feature}`;
-    }
+    outcome!.textContent = isCorrect ? "Nice!" : "So close!";
+    outcome!.classList.toggle("outcome-correct", isCorrect);
+    outcome!.classList.toggle("outcome-wrong", !isCorrect);
     lastEntry = DIRECTION_TO_ENTRY[direction];
     setEntry(detailScreen!, lastEntry);
     guessScreen!.hidden = true;
@@ -137,10 +123,12 @@ function wireRound(round: HTMLElement, onAdvance: () => void): void {
     if (direction) choose(direction);
   });
 
-  // Only the dedicated button advances — a tap anywhere else on the detail
+  // Only the dedicated buttons advance — a tap anywhere else on the detail
   // screen (photo, notes) used to trigger it too, which was too easy to
-  // fire by accident while just reading.
-  detailNext.addEventListener("click", next);
+  // fire by accident while just reading. There are two of them (top and
+  // bottom of a screen long enough to need both), so wire every match
+  // rather than assuming exactly one.
+  for (const button of detailNextButtons) button.addEventListener("click", next);
 }
 
 export function initBirdGame(root: Document): void {
@@ -203,6 +191,24 @@ export function initBirdGame(root: Document): void {
       if (previousDetail) previousDetail.hidden = false;
       current -= 1;
       showRound(current);
+    });
+  });
+
+  // Switches which confusable panel is visible when a round has more than
+  // one. No explicit re-layout call is needed on change: the newly-shown
+  // panel's .annotated-photo fires its own ResizeObserver callback the
+  // moment it gets a real box (display: none → block is itself a resize),
+  // per leader-lines.ts's design.
+  rounds.forEach((round) => {
+    const select = round.querySelector<HTMLSelectElement>('[data-testid="confusable-select"]');
+    if (!select) return;
+    const panels = Array.from(
+      round.querySelectorAll<HTMLElement>('[data-testid="confusable-panel"]'),
+    );
+    select.addEventListener("change", () => {
+      panels.forEach((panel, i) => {
+        panel.hidden = String(i) !== select.value;
+      });
     });
   });
 

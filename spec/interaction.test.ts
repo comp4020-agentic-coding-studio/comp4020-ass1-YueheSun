@@ -3,17 +3,18 @@
 // top/bottom/left/right. The visitor picks one by tap/click, by an arrow key,
 // or by a swipe — a phone swipes, a desktop presses arrow keys, and either
 // should also just be tappable, so all three paths are asserted here. Any
-// pick — right or wrong — jumps straight to a detail screen: an outcome line
-// ("Nice!" or "So close! It's the <species>."), then the one feature that
-// actually distinguishes it, then the mystery photo again (now with an alt
-// caption naming the bird), then a supporting habitat/behaviour note, then a
-// dedicated "Next" button (data-testid="detail-next"). Advancing requires
-// hitting that button (or Enter/Space, since a real <button> gets that for
-// free) — tapping elsewhere on the detail screen must NOT advance, which used
-// to be the contract and turned out to be too easy to trigger by accident
-// while just reading the photo/notes. The transition into the detail screen
-// mirrors the direction that was picked (swipe/press left → arrives from the
-// right), so that's asserted too via the `enter-from-*` class it applies.
+// pick — right or wrong — jumps straight to a detail screen: an outcome
+// chip ("Nice!" or "So close!", styled via outcome-correct/outcome-wrong,
+// deliberately never naming the species inline — that's what the feature
+// cards below it are for, static Astro output this fixture doesn't need to
+// exercise), then a dedicated "Next" button (data-testid="detail-next").
+// Advancing requires hitting that button (or Enter/Space, since a real
+// <button> gets that for free) — tapping elsewhere on the detail screen must
+// NOT advance, which used to be the contract and turned out to be too easy
+// to trigger by accident while just reading the photo/notes. The transition
+// into the detail screen mirrors the direction that was picked (swipe/press
+// left → arrives from the right), so that's asserted too via the
+// `enter-from-*` class it applies.
 // The keyboard and swipe tests below deliberately dispatch their events on
 // `document`, not on `round`: keydown only bubbles up from whatever element
 // currently has focus, and nothing in this fixture is focused by default, so
@@ -45,16 +46,12 @@ function renderFixture() {
         <button data-testid="option" data-position="top" data-name="Azure-winged Magpie"></button>
         <button data-testid="option" data-position="bottom" data-name="Eurasian Tree Sparrow"></button>
         <button data-testid="option" data-position="left" data-name="Light-vented Bulbul"
-                data-correct="true"
-                data-feature="pale grey-white patch behind the eye"
-                data-notes="common in parks and gardens; noisy and gregarious, eats fruit and insects"></button>
+                data-correct="true"></button>
         <button data-testid="option" data-position="right" data-name="Oriental Magpie-Robin"></button>
       </div>
       <div data-testid="screen-detail" hidden>
         <p data-testid="outcome"></p>
-        <p data-testid="detail-feature"></p>
-        <img data-testid="detail-photo" alt="" />
-        <p data-testid="detail-notes"></p>
+        <button data-testid="detail-next" type="button">Next</button>
         <button data-testid="detail-next" type="button">Next</button>
       </div>
     </section>
@@ -74,10 +71,13 @@ function renderFixture() {
     guessScreen: document.querySelector<HTMLElement>('[data-testid="screen-guess"]')!,
     detailScreen: document.querySelector<HTMLElement>('[data-testid="screen-detail"]')!,
     outcome: document.querySelector<HTMLElement>('[data-testid="outcome"]')!,
-    detailFeature: document.querySelector<HTMLElement>('[data-testid="detail-feature"]')!,
-    detailNotes: document.querySelector<HTMLElement>('[data-testid="detail-notes"]')!,
-    detailPhoto: document.querySelector<HTMLImageElement>('[data-testid="detail-photo"]')!,
+    // The real page renders two of these (top and bottom of a long detail
+    // screen) — this fixture mirrors that so the "either one advances" case
+    // below has something real to exercise.
     detailNext: document.querySelector<HTMLElement>('[data-testid="detail-next"]')!,
+    detailNextButtons: Array.from(
+      document.querySelectorAll<HTMLElement>('[data-testid="detail-next"]'),
+    ),
   };
 }
 
@@ -88,23 +88,27 @@ describe("bird identification game", () => {
     expect(detailScreen.hidden).toBe(true);
   });
 
-  it("jumps to the detail screen with positive feedback when the visitor taps the correct option", () => {
+  it("jumps to the detail screen with a positive outcome chip when the visitor taps the correct option", () => {
     const { window, option, guessScreen, detailScreen, outcome } = renderFixture();
     option("left").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
     expect(guessScreen.hidden, NEXT_STEP).toBe(true);
     expect(detailScreen.hidden).toBe(false);
     expect(outcome.textContent).toContain("Nice!");
+    expect(outcome.classList.contains("outcome-correct"), NEXT_STEP).toBe(true);
+    expect(outcome.classList.contains("outcome-wrong")).toBe(false);
   });
 
-  it("jumps to the detail screen naming the correct species, its feature, its photo, and its notes on a wrong tap", () => {
-    const { window, option, detailScreen, outcome, detailFeature, detailNotes, detailPhoto } =
-      renderFixture();
+  it("jumps to the detail screen with a 'so close' outcome chip that doesn't name the species inline on a wrong tap", () => {
+    const { window, option, detailScreen, outcome } = renderFixture();
     option("top").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
     expect(detailScreen.hidden, NEXT_STEP).toBe(false);
-    expect(outcome.textContent).toContain("Light-vented Bulbul");
-    expect(detailFeature.textContent).toContain("pale grey-white patch");
-    expect(detailNotes.textContent).toContain("common in parks");
-    expect(detailPhoto.src).toContain("mystery.jpg");
+    expect(outcome.textContent).toContain("So close!");
+    // The species name now lives in the feature card below, not the outcome
+    // line — that's the actual point of this change (readability: the old
+    // "So close! It's the X." sentence was hard to read).
+    expect(outcome.textContent).not.toContain("Light-vented Bulbul");
+    expect(outcome.classList.contains("outcome-wrong"), NEXT_STEP).toBe(true);
+    expect(outcome.classList.contains("outcome-correct")).toBe(false);
   });
 
   it("accepts an arrow key with no prior click/focus inside the round, so it works from a cold page load (desktop)", () => {
@@ -152,6 +156,16 @@ describe("bird identification game", () => {
     expect(guessScreen.hidden).toBe(false);
   });
 
+  it("advances on either Next button — the detail screen renders one at the top and one at the bottom, and both must work", () => {
+    const { window, option, guessScreen, detailScreen, detailNextButtons } = renderFixture();
+    expect(detailNextButtons.length, NEXT_STEP).toBe(2);
+    option("top").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    expect(detailScreen.hidden).toBe(false);
+    detailNextButtons[1]!.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    expect(detailScreen.hidden, NEXT_STEP).toBe(true);
+    expect(guessScreen.hidden).toBe(false);
+  });
+
   it("does NOT advance on a tap elsewhere on the detail screen — only the Next button should", () => {
     const { window, option, detailScreen } = renderFixture();
     option("top").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
@@ -179,16 +193,11 @@ function roundMarkup(n: number): string {
         <button data-testid="option" data-position="top" data-name="Decoy Top ${n}"></button>
         <button data-testid="option" data-position="bottom" data-name="Decoy Bottom ${n}"></button>
         <button data-testid="option" data-position="left" data-name="Correct Bird ${n}"
-                data-correct="true"
-                data-feature="feature ${n}"
-                data-notes="notes ${n}"></button>
+                data-correct="true"></button>
         <button data-testid="option" data-position="right" data-name="Decoy Right ${n}"></button>
       </div>
       <div data-testid="screen-detail" hidden>
         <p data-testid="outcome"></p>
-        <p data-testid="detail-feature"></p>
-        <img data-testid="detail-photo" alt="" />
-        <p data-testid="detail-notes"></p>
         <button data-testid="detail-next" type="button">Next</button>
       </div>
     </section>
