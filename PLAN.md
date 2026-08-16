@@ -37,7 +37,10 @@ That's the whole app. One page, one state machine, one dataset.
 
 - **4–5 rounds.** Each round needs exactly:
   - one photo (the mystery bird) — this is the only place a photo is
-    required; the three decoy option buttons are text-only, no image.
+    required; the three decoy option buttons are text-only, no image. It's
+    reused as the detail-screen image too, so it must be a representative
+    shot that clearly shows the round's one distinguishing feature, not just
+    any photo of the species.
   - the correct species' name
   - its one distinguishing feature (a phrase, not a paragraph)
   - one short habitat/behaviour line
@@ -85,7 +88,16 @@ That's the whole app. One page, one state machine, one dataset.
 - **"Corresponding image" on the detail screen is the same mystery photo**,
   re-shown with a caption that now names the species — not a second photo
   asset per round. Keeps PLAN's "one photo per round" minimum-content
-  requirement unchanged.
+  requirement unchanged, but raises the bar on *which* photo qualifies: it
+  must clearly show the one distinguishing feature named in that round, not
+  just be any photo of the species. Added below under "Minimum content."
+- **The page-transition direction mirrors the swipe/keypress that triggered
+  it** — pick "left" (swipe left or ArrowLeft) and the detail screen arrives
+  from the right, continuing that motion, not a fixed slide direction.
+  Tapping "Next" continues in the same direction rather than reversing it, so
+  a full guess→detail→next cycle reads as one motion. Both the direction
+  chosen and the resulting `enter-from-*` class are asserted in
+  `spec/interaction.test.ts`.
 - **Notes (habitat/behaviour) are kept** on the detail screen, appended after
   the photo, even though they weren't explicitly re-requested when this screen
   was redesigned — nothing said to cut them, and they were the original

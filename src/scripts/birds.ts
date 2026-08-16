@@ -18,6 +18,28 @@ function directionFromSwipe(dx: number, dy: number): Direction | null {
   return dy > 0 ? "bottom" : "top";
 }
 
+// The incoming screen enters from the opposite edge to the direction picked,
+// so the motion reads as a continuation of the swipe/keypress that picked it
+// (swipe left → next content arrives from the right), not a fixed direction.
+const ENTRY_CLASSES = [
+  "enter-from-left",
+  "enter-from-right",
+  "enter-from-top",
+  "enter-from-bottom",
+] as const;
+
+const DIRECTION_TO_ENTRY: Record<Direction, (typeof ENTRY_CLASSES)[number]> = {
+  left: "enter-from-right",
+  right: "enter-from-left",
+  top: "enter-from-bottom",
+  bottom: "enter-from-top",
+};
+
+function setEntry(screen: HTMLElement, entryClass: string): void {
+  screen.classList.remove(...ENTRY_CLASSES);
+  screen.classList.add(entryClass);
+}
+
 function wireRound(round: HTMLElement): void {
   const options = Array.from(
     round.querySelectorAll<HTMLElement>('[data-testid="option"]'),
@@ -36,8 +58,9 @@ function wireRound(round: HTMLElement): void {
 
   const doc = round.ownerDocument;
   const isGuessing = () => !guessScreen.hidden;
+  let lastEntry: string = DIRECTION_TO_ENTRY.right;
 
-  function showDetail(isCorrect: boolean): void {
+  function showDetail(isCorrect: boolean, direction: Direction): void {
     outcome!.textContent = isCorrect ? "Nice!" : `So close! It's the ${correct!.dataset.name}.`;
     detailFeature!.textContent = correct!.dataset.feature ?? "";
     detailNotes!.textContent = correct!.dataset.notes ?? "";
@@ -45,18 +68,24 @@ function wireRound(round: HTMLElement): void {
       detailPhoto.src = mysteryPhoto.src;
       detailPhoto.alt = `${correct!.dataset.name} — showing ${correct!.dataset.feature}`;
     }
+    lastEntry = DIRECTION_TO_ENTRY[direction];
+    setEntry(detailScreen!, lastEntry);
     guessScreen!.hidden = true;
     detailScreen!.hidden = false;
   }
 
   function next(): void {
+    // Continues in the same direction that led into this detail screen,
+    // rather than reversing it, so a full guess→detail→next cycle reads as
+    // one motion, not a slide-in followed by a slide-back.
+    setEntry(guessScreen!, lastEntry);
     detailScreen!.hidden = true;
     guessScreen!.hidden = false;
   }
 
   function choose(position: Direction): void {
     if (!isGuessing()) return;
-    showDetail(position === correct!.dataset.position);
+    showDetail(position === correct!.dataset.position, position);
   }
 
   for (const option of options) {

@@ -9,9 +9,21 @@
 // caption naming the bird), then a supporting habitat/behaviour note. "Next"
 // is any tap (or Enter/Space) anywhere on that detail screen — no separate
 // button — and it carries button semantics (role/tabindex) so this is also
-// keyboard-reachable, not tap-only. Background music is deliberately not
-// asserted here: it's ambient mood-setting, independent of whether the pick
-// was right or wrong, so it isn't part of this interaction contract.
+// keyboard-reachable, not tap-only. The transition into the detail screen
+// mirrors the direction that was picked (swipe/press left → arrives from the
+// right), so that's asserted too via the `enter-from-*` class it applies.
+// The keyboard and swipe tests below deliberately dispatch their events on
+// `document`, not on `round`: keydown only bubbles up from whatever element
+// currently has focus, and nothing in this fixture is focused by default, so
+// a listener wrongly scoped to `round` would still pass a test that dispatched
+// straight at `round` (dispatching at a target reaches its own listeners
+// regardless of focus) while still being broken for a real visitor who hasn't
+// clicked anything yet. Dispatching from `document` instead reproduces that
+// real condition, so this test only passes if the fix (listening on
+// `round.ownerDocument`) is actually in place.
+// Background music is deliberately not asserted here: it's ambient
+// mood-setting, independent of whether the pick was right or wrong, so it
+// isn't part of this interaction contract.
 // This drives `initBirdGame` against a markup fixture; it doesn't care how
 // the real page is built, only that this contract holds.
 import { JSDOM } from "jsdom";
@@ -90,25 +102,40 @@ describe("bird identification game", () => {
     expect(detailPhoto.src).toContain("mystery.jpg");
   });
 
-  it("also accepts the correct answer via arrow key, so it works without a touchscreen (desktop)", () => {
-    const { window, round, detailScreen, outcome } = renderFixture();
-    round.dispatchEvent(
+  it("accepts an arrow key with no prior click/focus inside the round, so it works from a cold page load (desktop)", () => {
+    const { window, detailScreen, outcome } = renderFixture();
+    // Dispatched on `document`, not `round` — see file-header comment. A
+    // listener wrongly scoped to `round` would miss this.
+    window.document.dispatchEvent(
       new window.KeyboardEvent("keydown", { bubbles: true, key: "ArrowLeft" }),
     );
     expect(detailScreen.hidden, NEXT_STEP).toBe(false);
     expect(outcome.textContent).toContain("Nice!");
   });
 
-  it("also accepts the correct answer via swipe, so it works without a keyboard (phone)", () => {
-    const { window, round, detailScreen, outcome } = renderFixture();
-    round.dispatchEvent(
+  it("accepts a swipe with no prior click/focus inside the round, so it works from a cold page load (phone)", () => {
+    const { window, detailScreen, outcome } = renderFixture();
+    window.document.dispatchEvent(
       new window.PointerEvent("pointerdown", { bubbles: true, clientX: 200, clientY: 200 }),
     );
-    round.dispatchEvent(
+    window.document.dispatchEvent(
       new window.PointerEvent("pointerup", { bubbles: true, clientX: 0, clientY: 200 }),
     );
     expect(detailScreen.hidden, NEXT_STEP).toBe(false);
     expect(outcome.textContent).toContain("Nice!");
+  });
+
+  it("animates the detail screen in from the opposite edge to the direction picked", () => {
+    const { window, option, detailScreen } = renderFixture();
+    option("top").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    expect(detailScreen.classList.contains("enter-from-bottom"), NEXT_STEP).toBe(true);
+  });
+
+  it("animates the guess screen back in from that same edge on 'Next', continuing the motion rather than reversing it", () => {
+    const { window, option, guessScreen, detailScreen } = renderFixture();
+    option("top").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    detailScreen.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    expect(guessScreen.classList.contains("enter-from-bottom"), NEXT_STEP).toBe(true);
   });
 
   it("returns to the guess screen on a tap anywhere on the detail screen — 'Next' is the detail screen itself", () => {

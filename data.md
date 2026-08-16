@@ -201,49 +201,12 @@ Black legs and feet
 
 Short, stocky, rounded body shape
 
-Quick tip
+**Quick tip**
 
-Feature
-
-	
-
-Species
-
-
-
-
-Yellow feet
-
-	
-
-Little Egret
-
-
-
-
-Gape line past eye
-
-	
-
-Great Egret
-
-
-
-
-Gape line stops before eye
-
-	
-
-Intermediate Egret
-
-
-
-
-Round, chunky shape
-
-	
-
-Cattle Egret
+- Yellow feet → Little Egret
+- Gape line extends past the eye → Great Egret
+- Gape line stops before the eye → Intermediate Egret
+- Short, round, chunky body → Cattle Egret
 
 7. Little Bunting vs Rustic Bunting
 Little Bunting (小鹀)

@@ -26,10 +26,42 @@ a {
 }
 
 .screen {
-  animation: page-swipe-in 360ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-duration: 360ms;
+  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation-fill-mode: both;
 }
 
-@keyframes page-swipe-in {
+/* Which keyframe plays is set by JS via one of these classes, matching the
+   swipe/keypress direction that triggered the screen change. */
+.enter-from-left {
+  animation-name: enter-from-left;
+}
+
+.enter-from-right {
+  animation-name: enter-from-right;
+}
+
+.enter-from-top {
+  animation-name: enter-from-top;
+}
+
+.enter-from-bottom {
+  animation-name: enter-from-bottom;
+}
+
+@keyframes enter-from-left {
+  from {
+    transform: translateX(-16%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes enter-from-right {
   from {
     transform: translateX(16%);
     opacity: 0;
@@ -37,6 +69,30 @@ a {
 
   to {
     transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes enter-from-top {
+  from {
+    transform: translateY(-16%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes enter-from-bottom {
+  from {
+    transform: translateY(16%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
     opacity: 1;
   }
 }
