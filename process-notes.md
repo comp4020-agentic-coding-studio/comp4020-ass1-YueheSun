@@ -439,3 +439,71 @@ inline CSS plus a comment, not a test. Log this as evidence the existing rule
 earns its keep (a real, non-obvious, structurally-unstaticable-checkable bug,
 caught only because the rule was followed), not as one of this deliverable's
 few A1-original harness corrections.
+
+---
+
+### Chose a width-only photo cap to protect the annotation-ring invariant, and fully reverted the back-question feature's test contract
+
+**What happened:** five independent UI adjustments requested in one pass:
+shrink the FeatureCard photo to match the guess-screen photo's size, revert
+the guess-screen options from a pill back to a rounded rectangle, add subtle
+bird-themed decoration, remove the back-question feature entirely, and make
+the confusable panel collapsed-by-default. The first and fourth of these
+were the ones that touched the harness; the other three (shape, decoration,
+default-collapsed markup) were style/markup changes under an unchanged
+contract and aren't logged as separate moments here.
+
+**Rejected the literal reading of the sizing request to protect an existing
+invariant:** "match the image dimensions on the guess screen" literally
+means matching width *and* height, which for a differently-proportioned
+photo means cropping or letterboxing. `.annotation-circle` positions rings
+by `left/top: N%`, correct only because `.feature-photo` is shown at its
+natural aspect ratio (documented in `global.css` and in the "Verifying
+detail-photo markers" CLAUDE.md section) — boxing the photo to a foreign
+aspect ratio would break that percentage math for every one of ~25 marker
+cards, not just the ones touched here. Surfaced this conflict via
+`AskUserQuestion` with three options (width-only cap / full W+H with
+letterboxing / full W+H with cropping), naming the cost of the latter two
+explicitly. User picked the width-only option, rejecting the literal
+full-match reading. This is the harness-protecting decision — it kept the
+"never crop/box `.feature-photo`" invariant intact without re-verifying
+every marker card, rather than "closest to what was asked."
+
+**Task 4 was a full revert of both the feature and its test contract, not a
+hide:** deleted the `.back-question` button, its `birds.ts` cross-round
+wiring, its CSS — and also deleted `spec/interaction.test.ts`'s dedicated
+3-test `describe("back to previous question", ...)` block, replacing it with
+a single trimmed test that keeps only the still-relevant cross-round
+`current`/`showRound()` coverage `renderRoundsFixture` was built for. The
+spec no longer asserts back-navigation exists at all — the contract changed
+shape to match the reversed feature decision, not just the code.
+
+**How I knew it was right:** `pnpm check` green at 189/189 throughout.
+`pnpm verify:markers` re-run and reasoned (not just assumed) that a CSS-only
+`max-width` cap can't affect its output, since it composites directly onto
+source photo pixels independent of display CSS — a deliberate, justified
+skip of the usual "review every preview" step, not a shortcut taken blind.
+`agent-browser` pass at both 1920×1080 and 390×844 confirmed: feature-photo
+width equals the fixed 13.25rem cap (212px, matching the guess-screen photo
+at desktop where the cap was measured); rings still land correctly at both
+sizes; the confusable panel opens closed (`.confusable-section.open ===
+false` on a fresh round) and leader lines redraw correctly on first expand
+and on a subsequent dropdown switch (multi-confusable round); no
+back-question button anywhere; no horizontal overflow at either viewport.
+
+**Citation:** [`7a93692`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/7a93692)
+(width cap + shape + decoration), [`985a2ee`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/985a2ee)
+(back-question full revert, including the `spec/interaction.test.ts` contract
+change), [`58901ce`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/58901ce)
+(collapsed-by-default confusable panel).
+
+**Caution:** the width-only cap is a fixed rem value (13.25rem) measured
+once at 1920×1080, not a responsive computation — at 390×844 the
+guess-screen photo itself shrinks further (to ~117px, driven by `.board`'s
+own grid math at that viewport) while the feature-photo cap stays at 212px,
+so the two aren't pixel-identical at every viewport, only at the one they
+were measured against. This was the explicitly approved tradeoff (the plan
+said "hard-code the pixel-equivalent rem value measured live"), not an
+oversight, and the phone screenshot still reads as proportionate rather than
+oversized — but it's worth naming plainly rather than letting "matches the
+guess screen" stand unqualified.
