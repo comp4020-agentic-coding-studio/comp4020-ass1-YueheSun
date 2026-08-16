@@ -72,8 +72,9 @@ import { photoUrl } from "../data/round-photos";
               </section>
 
               <section class="panel panel-confusable">
-                <div class="confusable-section">
-                  {round.confusables.length > 1 ? (
+                <details class="confusable-section">
+                  <summary class="confusable-label">Often confused with</summary>
+                  {round.confusables.length > 1 && (
                     <select
                       class="confusable-select"
                       data-testid="confusable-select"
@@ -83,15 +84,13 @@ import { photoUrl } from "../data/round-photos";
                         <option value={i}>{confusable.name}</option>
                       ))}
                     </select>
-                  ) : (
-                    <p class="confusable-label">Often confused with:</p>
                   )}
                   {round.confusables.map((confusable, i) => (
                     <div class="feature-card-panel" data-testid="confusable-panel" hidden={i !== 0}>
                       <FeatureCard card={confusable} comparisonNote={confusable.comparisonNote} />
                     </div>
                   ))}
-                </div>
+                </details>
               </section>
 
               <button class="detail-next detail-next-bottom" data-testid="detail-next" type="button">

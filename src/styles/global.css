@@ -439,9 +439,16 @@ h1 {
   text-align: left;
 }
 
-.confusable-label {
+/* .confusable-section is a <details> element, closed by default — the
+   comparison is only shown once the visitor opens it themselves. */
+.confusable-section > summary.confusable-label {
+  cursor: pointer;
   font-weight: 700;
   color: var(--amber-dark);
+  margin: 0;
+}
+
+.confusable-section[open] > summary.confusable-label {
   margin: 0 0 0.75rem;
 }
 
