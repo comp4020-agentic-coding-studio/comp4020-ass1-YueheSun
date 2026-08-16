@@ -137,3 +137,48 @@ non-functional in this environment — missing system shared libraries,
 `apt-get install` blocked without interactive sudo). Photo choices lean on
 Wikipedia's lead image plus, for the kingfisher, a Commons search specifically
 for a female-labelled specimen — reasoned best-effort, not confirmed by eye.
+
+---
+
+### Added photo-annotation markers, which forced eye-verification of every photo and caught 3 that didn't show their claimed feature
+
+**What happened:** to connect the quiz interaction more directly to the
+science-communication content, added a marker (a pulsing ring, positioned via
+build-time-computed percentage coordinates in `rounds.ts`) on the detail-screen
+photo pointing at exactly where each round's named feature is visible — so the
+interaction shows the mark, not just states it in text.
+
+**Not just a feature add — it closed the exact gap flagged above:** placing a
+marker requires knowing the feature's precise pixel location, which is a much
+stronger test than "does this photo look roughly right" — it's impossible to
+mark a location that doesn't visually exist. With no working headless browser
+still available (`agent-browser` also confirmed not installed this session),
+built a proxy: composited an SVG ring onto each source JPEG at its stored
+coordinates with `sharp` (pulled from its nested pnpm path, since it isn't
+hoisted) and viewed the output directly. This is what actually surfaced the
+three real content bugs the previous entry's Caution predicted might exist:
+`dove-spotted.jpg` didn't show the tail pattern the round claims (side-profile,
+tail folded), `heron-night.jpg` was an *adult* with plain wings when the round's
+text explicitly says "immature... spotted wings," and `thrush-naumanns.jpg`
+showed a pale throat when `data.md` explicitly claims Naumann's Thrush has a
+dark one (confirmed by grepping `data.md` directly, not just re-reading
+`rounds.ts`). All three were re-sourced from Wikimedia Commons and swapped in;
+`ATTRIBUTION.md` updated to match.
+
+**How I knew it was right:** for all 12 rounds, generated a marker-on-photo
+composite and read it back before trusting the stored coordinates — including
+one case (`kingfisher-common.jpg`) that looked like a fourth mismatch (bill
+reads as solid black in the full photo) until a tight crop on just the bill
+confirmed the lower mandible's base genuinely is orange-red, so no photo
+change was needed there — the ambiguity was resolution/lighting, not a wrong
+photo. `pnpm check` stayed green (23/23) throughout, including fixing two
+stylelint violations on the new marker CSS (`#ffcc33`→`#fc3`,
+`rgba(0,0,0,.35)`→`rgb(0 0 0 / 35%)`).
+
+**Citation:** [`752ab25`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/752ab25)
+
+**Caution:** this closes the previous entry's Caution for 3 of 12 photos by
+direct discovery, but the other 9 were only confirmed to show their feature at
+the specific marker point checked — not audited for every other claim in their
+`feature`/`notes` text. Treat "photo shows the named feature" as verified, not
+"photo has zero other issues."
