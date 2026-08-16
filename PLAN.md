@@ -42,7 +42,11 @@ That's the whole app. One page, one state machine, one dataset.
     required; the three decoy option buttons are text-only, no image. It's
     reused as the detail-screen image too, so it must be a representative
     shot that clearly shows the round's one distinguishing feature, not just
-    any photo of the species.
+    any photo of the species — and now that the detail screen marks *where*
+    on the photo the feature sits (see "Resolved"), the photo must show it at
+    a specific, pointable location, not just somewhere in frame.
+  - a marker position (`x`/`y` percentages in `rounds.ts`) locating that
+    feature on the photo
   - the correct species' name
   - its one distinguishing feature (a phrase, not a paragraph)
   - one short habitat/behaviour line
@@ -141,6 +145,28 @@ That's the whole app. One page, one state machine, one dataset.
   doesn't require the four options to be four different species, only four
   plausible labels with one correct answer, so this fits without changing
   `birds.ts` or the spec contract.
+
+- **The detail screen marks where the feature is, not just names it** — a
+  pulsing ring drawn on the detail photo at the exact spot the round's
+  `feature` text describes, so the science-communication content is shown, not
+  only stated. Coordinates are `x`/`y` percentages of the photo's own natural
+  size, computed per round in `rounds.ts` and rendered as inline `style` at
+  build time — no client-side positioning logic. This only maps correctly
+  because `.detail-photo` is displayed unclipped (natural aspect ratio, no
+  `object-fit`), unlike the guess-screen photo, which stays cropped since it
+  carries no marker.
+- **Placing a marker forced a real accuracy check the photo sourcing hadn't
+  had.** With no working real-browser renderer in this environment, verified
+  every marker by compositing it onto its source photo (via `sharp`) and
+  viewing the result directly, rather than trusting Commons metadata/captions
+  as before. This caught three photos that didn't actually show their claimed
+  feature — `dove-spotted.jpg` (wrong tail angle for the tail-pattern claim),
+  `heron-night.jpg` (an adult shown for a round whose text explicitly says
+  "immature... spotted wings"), `thrush-naumanns.jpg` (pale throat shown for a
+  round claiming a dark one, per `data.md`) — all three re-sourced and
+  replaced. One photo that looked like a fourth mismatch at full size
+  (`kingfisher-common.jpg`'s bill reading as solid black) turned out fine on a
+  tight crop; not every visual doubt is a wrong photo.
 
 ## Open before building
 
