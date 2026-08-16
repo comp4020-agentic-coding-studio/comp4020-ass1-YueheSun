@@ -406,7 +406,7 @@ const roundDefs: Round[] = [
         latinName: "Glaucidium passerinum",
         photoSlug: "owl-pygmy",
         notes: "Europe's smallest owl, found in coniferous forest; also day-active and often perches in the open.",
-        annotations: [{ x: 48, y: 15, label: "fine horizontal bars across the head" }],
+        annotations: [{ x: 48, y: 20, label: "fine horizontal bars across the head" }],
         comparisonNote:
           "Head covered in small spots → Collared Owlet. Fine horizontal bars across the head → Eurasian Pygmy Owl.",
       },
@@ -437,7 +437,7 @@ const roundDefs: Round[] = [
         latinName: "Alcedo atthis",
         photoSlug: "kingfisher-common-male",
         notes: "Identical in size and plumage to the female, apart from an all-black bill.",
-        annotations: [{ x: 60, y: 32, label: "entire bill black" }],
+        annotations: [{ x: 35, y: 23, label: "entire bill black" }],
         comparisonNote: "All-black bill → male. Red lower bill → female.",
       },
     ],
