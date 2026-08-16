@@ -242,3 +242,51 @@ compare against the feature text each time — nothing stops someone from
 running `pnpm verify:markers` and skipping the "open every file" step. The
 CLAUDE.md rule makes that failure mode visible in review (a photo/marker
 commit with no corresponding "I looked" trail), not impossible.
+
+---
+
+### Widened the marker check to species identity after a bug report, even though the report turned out to be a false alarm
+
+**What happened:** a report came in that `dove-spotted.jpg` might actually
+show a bird of prey, not the Spotted Dove the round claims — the same failure
+category as the earlier photo mismatches, but one the existing marker/feature
+check couldn't have caught, since it only ever looks at *where* the ring sits,
+not *what species* is in the photo. Audited all 12 photos against their
+claimed species and Commons sources before touching any code. Verdict: 11
+clearly matched; the flagged one didn't actually check out as wrong — a tight
+crop showed a straight (non-raptor) bill and the black-and-white speckled neck
+patch that's the Spotted Dove's diagnostic "spotted" collar, and the Commons
+source page consistently labels it Spotted Dove with no dispute recorded
+anywhere. Reported that disagreement back rather than silently swapping the
+photo to match the report.
+
+**Widened the check anyway:** a false alarm on this specific photo doesn't
+mean the gap it pointed at wasn't real — nothing enforced that a round's
+species name and its photo's attribution stayed in agreement, and nothing
+prompted a reviewer to check species identity at all, only feature placement.
+Extended `src/data/rounds.test.ts` with a mechanical cross-check (each round's
+species name must appear, sex-prefix-normalized, in `ATTRIBUTION.md`'s
+recorded species text for that photo — catches a swapped photo whose
+attribution row didn't get updated) and extended `scripts/verify-markers.ts`
+to print the claimed species next to each preview, so the same human-eye pass
+that already checks marker placement now also checks species identity in one
+look. Updated the CLAUDE.md section to ask for both. This is the same
+two-tier pattern as the original marker check (mechanical test + human-eye
+contact sheet) applied to a second, previously-unchecked claim, not a new
+mechanism.
+
+**How I knew it was right:** `pnpm check` went 47/47 → 71/71 (24 new
+attribution-cross-check assertions, one pair per round); `pnpm verify:markers`
+re-run and its output confirmed to print species + feature correctly for all
+12 rounds, including the sex-prefix normalization working for
+`kingfisher-common` ("Female Common Kingfisher" vs. attribution's "Common
+Kingfisher, female").
+
+**Citation:** [`aafd0ad`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/aafd0ad)
+
+**Caution:** the mechanical cross-check only catches label *disagreement*
+between `rounds.ts` and `ATTRIBUTION.md` — it can't catch a photo that's
+mislabeled identically in both places (attribution copied from a wrongly-IDed
+Commons file, matching a round name that was written to match). That failure
+mode still depends entirely on the human-eye pass, same as feature placement
+always has.
