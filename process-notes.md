@@ -57,18 +57,23 @@ tests passed anyway because jsdom's `dispatchEvent` targets the element
 directly, sidestepping focus/gesture semantics entirely.
 
 **What I did instead of the obvious thing:** rather than just patching the
-code and leaving the old tests green, I rewrote the keyboard/swipe tests to
-dispatch from `document` instead of `round` — reproducing the actual "no
-prior focus" condition — so they'd fail against the old bug and only pass
-against the real fix (`round.ownerDocument`-scoped listeners). The previous
-tests were not real regression guards; they coincidentally passed either way.
+code and leaving the old tests green, I changed *what the two keyboard/swipe
+tests dispatch on* — `document` instead of `round` — reproducing the actual
+"no prior focus" condition. Their assertions (`detailScreen.hidden` false,
+`outcome.textContent` contains "Nice!") are unchanged; that's the point —
+same claim, now checked under the condition that actually broke it, rather
+than a different claim. Confirmed by re-diffing the two commits directly
+(`git show 6704c50:spec/interaction.test.ts` vs. `f28b965:...`): only
+`round.dispatchEvent` → `window.document.dispatchEvent` changed on those two
+tests, nothing else. `f28b965` separately adds two brand-new tests with new
+assertions (`enter-from-bottom` class) for the direction-mirroring feature —
+a distinct correction (transition direction should follow the swipe/keypress,
+not be fixed), bundled into the same commit but not part of this moment.
 
-**How I knew it was right:** ran the rewritten tests against the pre-fix
-code mentally/by re-reading the old listener scope — the old `round`-scoped
-version would fail the new document-dispatch tests. `pnpm check` went
-21/21, then 23/23 after a follow-up correction (transition direction should
-mirror the swipe/keypress, not be fixed) added two more assertions on the
-`enter-from-*` class.
+**How I knew it was right:** re-read the old listener scope against the new
+dispatch target — a `round`-scoped listener would miss a `document`-dispatched
+event, so the old code would fail these tests where it used to pass them.
+`pnpm check` went 21/21 → 23/23 (2 retargeted + 2 new).
 
 **Citation:** [`6704c50`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/6704c50)
 (the bug fix + first spec rewrite, inline reveal → full detail-screen
