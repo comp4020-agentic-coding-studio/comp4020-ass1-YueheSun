@@ -182,3 +182,50 @@ direct discovery, but the other 9 were only confirmed to show their feature at
 the specific marker point checked — not audited for every other claim in their
 `feature`/`notes` text. Treat "photo shows the named feature" as verified, not
 "photo has zero other issues."
+
+---
+
+### Turned the previous entry's one-off marker check into a wired-up, repeatable one
+
+**What happened:** the previous entry's marker verification was a one-time
+manual pass — I looked, found 3 bad photos, fixed them, and the process left
+no trace that could catch the next mistake. Asked directly whether that could
+become "a check wired up" instead of just a process note. Talked through what
+part of "does the marker land on the right feature" is actually mechanical
+(coordinate in `[0,100]`, photo file exists — checkable by `vitest`/CI) versus
+semantic (does the marked pixel show the claimed feature — only checkable by
+looking at the image, and there's no vision model in the CI/test environment
+to do that for you). Rejected wiring a live vision-API call into the check
+itself: it would need a committed secret, adds cost and non-determinism to
+`pnpm check`, and a pass wouldn't actually prove content correctness, just
+create false confidence that it had been checked.
+
+**What got built instead of the obvious thing:** the obvious move would have
+stopped at "remember to look next time." Instead: (1) `src/data/rounds.test.ts`
+— a real `vitest` test, so `pnpm check` now fails hard on an out-of-range
+marker or a missing photo file; (2) `scripts/verify-markers.ts` (`pnpm
+verify:markers`) — composites every round's marker onto its actual source
+photo and writes a contact sheet to `.previews/markers/` (gitignored, so
+review output is never mistaken for reviewed-and-committed evidence); (3) a
+new CLAUDE.md section, "Verifying detail-photo markers," making running and
+eyeballing that script a required step before committing any round's
+photo/marker change — the check that defines "done" for a marker change now
+includes a human-eye pass, not just green CI. Required splitting `rounds.ts`
+(plain data, importable from Node) out of a new `round-photos.ts` (the
+Vite-only `import.meta.glob` half), since the verify script runs in plain Node
+outside Vite.
+
+**How I knew it was right:** `pnpm verify:markers` produced 12 correctly
+composited previews (confirmed by reading two of them back — `owlet-collared`
+ring on the head, `kingfisher-common` ring on the bill base — both matching
+their `feature` text); `pnpm check` green after the `rounds.ts`/`round-photos.ts`
+split (47/47 tests, clean typecheck/build); `pnpm-lock.yaml` diff reviewed and
+limited to `sharp` becoming a direct rather than optional dependency.
+
+**Citation:** [`d4ca5d4`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/d4ca5d4)
+
+**Caution:** the contact sheet still requires a human to actually look and
+compare against the feature text each time — nothing stops someone from
+running `pnpm verify:markers` and skipping the "open every file" step. The
+CLAUDE.md rule makes that failure mode visible in review (a photo/marker
+commit with no corresponding "I looked" trail), not impossible.
