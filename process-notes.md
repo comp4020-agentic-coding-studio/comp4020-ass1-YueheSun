@@ -382,3 +382,60 @@ transition itself (only the return leg is animated, for free, via the
 unchanged `next()` path) — deliberate, since there's no swipe/keypress
 direction to reflect for a button click, but not verified against every
 possible stale-animation-class edge case beyond the one scenario driven above.
+
+---
+
+### The mandated phone-viewport pass caught a latent flex-basis bug the static marker script structurally can't see
+
+**What happened:** requested a detail-screen redesign (split answer/confusable
+into separate panels, prominent outcome banner, a second top-right Next
+button, whole-page nature-app reskin). Before committing, ran the
+CLAUDE.md-mandated real-browser pass at both graded viewports — a rule this
+same body of work had already written into CLAUDE.md's "Verifying
+detail-photo markers" section specifically because `verify:markers`'s
+pixels-only composite can't exercise leader lines or the confusable dropdown,
+both of which depend on real (`ResizeObserver`-driven) layout. Desktop
+(1920×1080) looked correct. At 390×844, two annotation rings rendered in
+blank space below their photos instead of on them.
+
+**Root cause, and why no static check could have caught it:** `flex-basis`
+always applies to the flex container's *main axis*. `.annotated-photo-frame`'s
+`flex: 1 1 16rem` is a sensible min-*width* in the desktop row layout, but the
+`@media (width <= 30rem)` breakpoint flips `.annotated-photo` to
+`flex-direction: column`, silently turning that same value into a min-*height*
+— stretching the frame taller than the rendered photo. `.annotation-circle`
+positions by `top: Y%` against the frame's box, so any ring below the photo's
+true bottom edge landed in that dead space. This bug was latent in the
+leader-line feature's original mobile CSS from the start (`ecada1d`) — nothing
+about this redesign introduced it; this redesign's browser pass is just the
+first time anyone actually looked at that breakpoint with real annotation data
+in it, because `verify:markers` composites onto the photo directly and has no
+concept of a CSS breakpoint at all.
+
+**Fix:** added `.annotated-photo-frame { flex-basis: auto; }` inside the same
+mobile media query, with a comment explaining the axis-flip so the next person
+touching this breakpoint doesn't reintroduce it by "simplifying" the override
+away.
+
+**How I knew it was right:** re-screenshotted the same round at 390×844 after
+the fix — both rings landed back on their photos, leader lines intact.
+`pnpm check` re-run green after the CSS change (typecheck, build, oxlint,
+stylelint, 191/191 tests). Also drove a multi-confusable round (Rufous-vented
+Tit, 2 confusables) through `agent-browser` at both viewports: dropdown switch
+redraws leader lines correctly, both Next buttons and the back-question button
+work, `document.documentElement.scrollWidth === window.innerWidth` at both
+1920 and 390 (no horizontal overflow).
+
+**Citation:** [`3261608`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/3261608)
+— the `.annotated-photo-frame { flex-basis: auto; }` fix and its explanatory
+comment are in this commit's `global.css` diff.
+
+**Caution — this is a check *validating itself*, not a new harness-level
+moment:** the rule that caught this (real-browser pass at both viewports,
+required before committing any round touching card layout) was already
+written into CLAUDE.md in an earlier commit (`ecada1d`), not added or changed
+here. No new automated check came out of finding this bug either — the fix is
+inline CSS plus a comment, not a test. Log this as evidence the existing rule
+earns its keep (a real, non-obvious, structurally-unstaticable-checkable bug,
+caught only because the rule was followed), not as one of this deliverable's
+few A1-original harness corrections.
