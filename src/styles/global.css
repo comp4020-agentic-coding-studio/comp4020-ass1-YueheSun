@@ -168,6 +168,26 @@ a {
   grid-row: 2;
 }
 
+.back-question {
+  grid-column: 1;
+  grid-row: 1;
+  place-self: start;
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  background: none;
+  color: #666;
+  cursor: pointer;
+}
+
+.back-question:hover,
+.back-question:focus-visible {
+  color: #0b5fff;
+  border-color: #0b5fff;
+}
+
 .screen-detail {
   max-width: 28rem;
   margin: 2rem auto;

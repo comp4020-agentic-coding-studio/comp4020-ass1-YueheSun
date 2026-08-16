@@ -178,6 +178,34 @@ export function initBirdGame(root: Document): void {
     });
   }
 
+  // Cross-round wiring: reaching into a *different* round's DOM and
+  // mutating the shared `current` counter doesn't belong inside wireRound's
+  // per-round closure, which only knows about its own round.
+  rounds.forEach((round, index) => {
+    const backButton = round.querySelector<HTMLElement>('[data-testid="back-question"]');
+    if (!backButton) return;
+    if (index === 0) {
+      backButton.hidden = true;
+      return;
+    }
+    backButton.addEventListener("click", () => {
+      const previous = rounds[current - 1];
+      if (!previous) return;
+      const previousGuess = previous.querySelector<HTMLElement>('[data-testid="screen-guess"]');
+      const previousDetail = previous.querySelector<HTMLElement>('[data-testid="screen-detail"]');
+      // The previous round's own detail content (outcome/feature/notes/photo)
+      // was never cleared when it advanced, only overwritten on its next
+      // answer — so re-showing it needs no state to be captured or restored,
+      // just flipping its guess/detail visibility back. Returning from here
+      // needs no new listener either: its own already-wired Next button
+      // re-increments this same `current` and calls showRound() again.
+      if (previousGuess) previousGuess.hidden = true;
+      if (previousDetail) previousDetail.hidden = false;
+      current -= 1;
+      showRound(current);
+    });
+  });
+
   if (rounds.length > 0) showRound(current);
 
   complete?.addEventListener("click", restart);
