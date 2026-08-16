@@ -5,11 +5,14 @@
 // should also just be tappable, so all three paths are asserted here. A
 // correct pick shows "Nice!" in place; a wrong pick reveals the correct
 // species, the one feature that actually distinguishes it, and brief
-// supporting notes (habitat/behaviour) below that feature. Background music
-// is deliberately not asserted here: it's ambient mood-setting, independent
-// of whether the pick was right or wrong, so it isn't part of this
-// interaction contract. This drives `initBirdGame` against a markup fixture;
-// it doesn't care how the real page is built, only that this contract holds.
+// supporting notes (habitat/behaviour) below that feature. The reveal itself
+// is "Next": tapping it (no separate button) dismisses it and resets for
+// another guess — it carries button semantics (role/tabindex) so this is
+// also keyboard-reachable, not tap-only. Background music is deliberately
+// not asserted here: it's ambient mood-setting, independent of whether the
+// pick was right or wrong, so it isn't part of this interaction contract.
+// This drives `initBirdGame` against a markup fixture; it doesn't care how
+// the real page is built, only that this contract holds.
 import { JSDOM } from "jsdom";
 import { describe, expect, it } from "vitest";
 import { initBirdGame } from "../src/scripts/birds";
@@ -30,7 +33,7 @@ function renderFixture() {
               data-notes="common in parks and gardens; noisy and gregarious, eats fruit and insects"></button>
       <button data-testid="option" data-position="right" data-name="Oriental Magpie-Robin"></button>
       <p data-testid="feedback"></p>
-      <div data-testid="reveal" hidden>
+      <div data-testid="reveal" role="button" tabindex="0" hidden>
         <p data-testid="reveal-species"></p>
         <p data-testid="reveal-feature"></p>
         <p data-testid="reveal-notes"></p>
@@ -100,5 +103,14 @@ describe("bird identification game", () => {
       new window.PointerEvent("pointerup", { bubbles: true, clientX: 0, clientY: 200 }),
     );
     expect(feedback.textContent, NEXT_STEP).toContain("Nice!");
+  });
+
+  it("dismisses the reveal on a tap, resetting for another guess — 'Next' is the reveal itself", () => {
+    const { window, option, reveal, feedback } = renderFixture();
+    option("top").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    expect(reveal.hidden).toBe(false);
+    reveal.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    expect(reveal.hidden, NEXT_STEP).toBe(true);
+    expect(feedback.textContent?.trim()).toBe("");
   });
 });

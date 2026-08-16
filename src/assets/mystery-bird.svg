@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="mystery-bird-title">
+  <title id="mystery-bird-title">Placeholder illustration of a small perching bird</title>
+  <rect width="400" height="400" fill="#dce9e3" />
+  <ellipse cx="200" cy="260" rx="70" ry="55" fill="#5b7c6b" />
+  <circle cx="150" cy="190" r="42" fill="#5b7c6b" />
+  <path d="M112 190 L80 178 L112 205 Z" fill="#d98c3f" />
+  <circle cx="140" cy="180" r="5" fill="#1a1a1a" />
+  <path d="M130 205 q20 14 45 4" fill="none" stroke="#f2c14e" stroke-width="10" stroke-linecap="round" />
+  <path d="M240 250 q60 10 40 60 q-40 -5 -55 -35 Z" fill="#3f5b4d" />
+</svg>
