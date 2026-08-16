@@ -21,7 +21,23 @@ body {
   font-family: system-ui, sans-serif;
   line-height: 1.6;
   color: var(--ink);
-  background: var(--bg);
+  background-color: var(--bg);
+
+  /* The same sitting-bird silhouette as .title-bird, tiled at very low
+     opacity — texture, not a pattern anyone should consciously notice. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cg fill='%232f6b4f' fill-opacity='0.05'%3E%3Cpath d='M20 56 L34 50 L34 62 Z'/%3E%3Cellipse cx='46' cy='55' rx='16' ry='12'/%3E%3Ccircle cx='64' cy='39' r='9'/%3E%3Cpath d='M72 38 L81 40 L72 43 Z'/%3E%3Cline stroke='%232f6b4f' stroke-width='1.5' x1='36' y1='68' x2='34' y2='76'/%3E%3Cline stroke='%232f6b4f' stroke-width='1.5' x1='46' y1='68' x2='48' y2='76'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.title-bird {
+  flex: none;
+  color: var(--green);
 }
 
 main {
@@ -174,7 +190,7 @@ h1 {
   font-weight: 600;
   padding: 0.6rem 0.5rem;
   border: 2px solid var(--green);
-  border-radius: 999px;
+  border-radius: 0.5rem;
   background: var(--surface);
   color: var(--green);
   cursor: pointer;
@@ -314,7 +330,15 @@ h1 {
 
 .annotated-photo-frame {
   position: relative;
-  flex: 1 1 16rem;
+
+  /* Capped to the guess-screen mystery photo's own rendered width (measured
+     from .board's grid math: (28rem - 2 * 0.75rem gap) / 4 columns * 2fr),
+     so the feature card's photo reads as the same size as the photo the
+     visitor just guessed from, not blown up. Height is left to the image's
+     own aspect ratio (feature-photo below), so nothing is cropped and the
+     annotation-circle %-of-natural-size math is untouched. */
+  flex: 1 1 13.25rem;
+  max-width: 13.25rem;
   min-width: 0;
 }
 
