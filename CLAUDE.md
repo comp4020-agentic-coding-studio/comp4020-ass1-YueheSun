@@ -95,24 +95,30 @@ in the course the spec will ask you to show how you tested both. When you do,
 read a green performance result honestly: it's a lab estimate from one run on a
 CI machine, not proof the site is fast for real users.
 
-## Verifying detail-photo markers
+## Verifying detail-photo markers (and species)
 
 Each round's detail screen draws a marker at a stored `x`/`y` percentage
 (`src/data/rounds.ts`) over the round's photo, pointing at the feature named in
-its `feature` text. `src/data/rounds.test.ts` checks what's mechanical ---
-every marker is within `[0, 100]`, every round's photo file exists --- but it
-can't check the thing that actually matters: whether the ring lands on the
-right part of the *image*. That's a claim about pixel content, and no test in
-this repo, and no vision model in the CI environment, can judge it. It's a
+its `feature` text --- and that photo is supposed to be of the species the
+round claims. `src/data/rounds.test.ts` checks what's mechanical --- every
+marker is within `[0, 100]`, every round's photo file exists, and
+`ATTRIBUTION.md`'s recorded species text for that file actually names the
+round's species (so a swapped photo whose attribution row didn't get updated
+fails loudly) --- but it can't check the thing that actually matters: whether
+the ring lands on the right part of the *image*, and whether the image is
+even of the right *bird*. Both are claims about pixel content, and no test in
+this repo, and no vision model in the CI environment, can judge them. It's a
 human-eye check, so make it a repeatable one instead of a one-off:
 
 - Run `pnpm verify:markers` after adding or changing any round's photo or
   marker coordinates. It composites each round's stored marker onto its actual
   source photo and writes the result to `.previews/markers/` (gitignored ---
   never commit these images, and never treat their presence as a substitute
-  for having looked at them).
-- Open every file it wrote and confirm the ring sits on the feature quoted
-  next to it in the script's output, not just somewhere near the bird.
+  for having looked at them), printing the claimed species and feature next
+  to each file.
+- Open every file it wrote and confirm two things: the ring sits on the
+  feature quoted next to it, and the photo actually shows the species named
+  next to it --- not just something plausible at a glance.
 - Do this **before** committing that round's change. A photo/marker commit
   made without running this is the same mistake `752ab25` caught by luck, not
   by process --- three of twelve markers were pointing at the wrong spot until
