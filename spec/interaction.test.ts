@@ -41,7 +41,6 @@ function renderFixture() {
     `
     <section data-testid="round">
       <div data-testid="screen-guess">
-        <button data-testid="back-question" type="button">Back to previous question</button>
         <img data-testid="mystery-photo" src="mystery.jpg" alt="Mystery bird" />
         <button data-testid="option" data-position="top" data-name="Azure-winged Magpie"></button>
         <button data-testid="option" data-position="bottom" data-name="Eurasian Tree Sparrow"></button>
@@ -182,13 +181,11 @@ describe("bird identification game", () => {
 // initBirdGame's per-round wiring (wireRound) is already covered end-to-end
 // via renderFixture() above. This fixture exists only to exercise the
 // cross-round machinery that requires more than one round to be present:
-// `current`, showRound(), and the back-question button's reach into a
-// *different* round's DOM.
+// `current` and showRound().
 function roundMarkup(n: number): string {
   return `
     <section data-testid="round">
       <div data-testid="screen-guess">
-        <button data-testid="back-question" type="button">Back to previous question</button>
         <img data-testid="mystery-photo" src="mystery-${n}.jpg" alt="Mystery bird" />
         <button data-testid="option" data-position="top" data-name="Decoy Top ${n}"></button>
         <button data-testid="option" data-position="bottom" data-name="Decoy Bottom ${n}"></button>
@@ -218,52 +215,15 @@ function renderRoundsFixture(count: number) {
   return { window, rounds, within };
 }
 
-describe("back to previous question", () => {
-  it("hides the back-question button on the very first round, since there's nothing before it", () => {
-    const { within } = renderRoundsFixture(2);
-    expect(within(0, "back-question").hidden, NEXT_STEP).toBe(true);
-  });
-
-  it("shows the back-question button on every round after the first", () => {
-    const { within } = renderRoundsFixture(2);
-    expect(within(1, "back-question").hidden, NEXT_STEP).toBe(false);
-  });
-
-  it("lets the visitor step back to see the previous round's detail screen again, with its original outcome preserved, then forward again to exactly where they left off", () => {
+describe("advancing across rounds", () => {
+  it("moves from one round to the next on Next, hiding the round it left", () => {
     const { window, rounds, within } = renderRoundsFixture(2);
-
-    // Answer round 0 correctly, then advance to round 1 the normal way —
-    // this reproduces the exact scenario in the feature request: the
-    // visitor clicked Next before finishing reading round 0's detail screen.
     const correctOption = rounds[0].querySelector<HTMLElement>('[data-position="left"]')!;
     correctOption.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
     expect(within(0, "outcome").textContent).toContain("Nice!");
     within(0, "detail-next").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-
-    // Now on round 1's guess screen.
     expect(rounds[0].hidden, NEXT_STEP).toBe(true);
     expect(rounds[1].hidden).toBe(false);
     expect(within(1, "screen-guess").hidden).toBe(false);
-
-    // Peek back at round 0's detail screen.
-    within(1, "back-question").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    expect(rounds[0].hidden, NEXT_STEP).toBe(false);
-    expect(rounds[1].hidden).toBe(true);
-    expect(within(0, "screen-guess").hidden).toBe(true);
-    expect(within(0, "screen-detail").hidden).toBe(false);
-    // The outcome text is never cleared by showDetail()/next() — this is the
-    // state-preservation claim the whole feature relies on, asserted directly.
-    expect(within(0, "outcome").textContent).toContain("Nice!");
-
-    // Return via round 0's own (already-wired) Next button — no dedicated
-    // "return" listener exists; this exercises the same onAdvance() closure
-    // that originally advanced from round 0 to round 1.
-    within(0, "detail-next").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    expect(rounds[1].hidden, NEXT_STEP).toBe(false);
-    expect(rounds[0].hidden).toBe(true);
-    // Round 1 was never touched during the peek: still on its own untouched
-    // guess screen, not accidentally answered or advanced past.
-    expect(within(1, "screen-guess").hidden).toBe(false);
-    expect(within(1, "screen-detail").hidden).toBe(true);
   });
 });
