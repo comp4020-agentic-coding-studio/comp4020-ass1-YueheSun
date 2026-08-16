@@ -44,3 +44,40 @@ showed the old click/hover version).
 predates this deliverable — it's already encoded in the crit2-era spec this
 repo carried forward, so it's context for this pivot, not a separate
 A1-original moment on its own.
+
+---
+
+**What happened:** two real-browser-only bugs the jsdom spec tests were
+blind to: (1) `keydown` was bound on `round`, but keydown only bubbles from
+whatever element has *focus* — nothing inside `round` is focused by default,
+so a key press before the visitor clicked anything reached nothing; (2)
+swipes were hijacked by the browser as a page pan (`touch-action: auto`
+fires `pointercancel`, not `pointerup`, once it recognises a scroll). Both
+tests passed anyway because jsdom's `dispatchEvent` targets the element
+directly, sidestepping focus/gesture semantics entirely.
+
+**What I did instead of the obvious thing:** rather than just patching the
+code and leaving the old tests green, I rewrote the keyboard/swipe tests to
+dispatch from `document` instead of `round` — reproducing the actual "no
+prior focus" condition — so they'd fail against the old bug and only pass
+against the real fix (`round.ownerDocument`-scoped listeners). The previous
+tests were not real regression guards; they coincidentally passed either way.
+
+**How I knew it was right:** ran the rewritten tests against the pre-fix
+code mentally/by re-reading the old listener scope — the old `round`-scoped
+version would fail the new document-dispatch tests. `pnpm check` went
+21/21, then 23/23 after a follow-up correction (transition direction should
+mirror the swipe/keypress, not be fixed) added two more assertions on the
+`enter-from-*` class.
+
+**Citation:** [`6704c50`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/6704c50)
+(the bug fix + first spec rewrite, inline reveal → full detail-screen
+redesign) and [`f28b965`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/f28b965)
+(direction-mirroring + the document-dispatch regression-guard rewrite).
+
+**Caution:** `6704c50`'s spec rewrite alone (inline reveal → detail screen)
+is a genuine harness-level moment on its own — the contract a check verifies
+changed shape, not just the code under an unchanged contract. The
+document-dispatch strengthening in `f28b965` is a second, separable
+harness-level moment: it's not "retry until green," it's noticing the first
+green was measuring the wrong thing and fixing the check itself.
