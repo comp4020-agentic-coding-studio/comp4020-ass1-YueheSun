@@ -5,17 +5,13 @@
 // ATTRIBUTION.md there for licensing/credit); every photo is the round's one
 // mystery image, reused captioned on the detail screen, so it has to clearly
 // show the feature named below, not just be any photo of the species.
-const photoUrls = import.meta.glob<string>("../assets/birds/*.jpg", {
-  eager: true,
-  query: "?url",
-  import: "default",
-});
-
-function photoUrl(slug: string): string {
-  const match = Object.entries(photoUrls).find(([path]) => path.endsWith(`/${slug}.jpg`));
-  if (!match) throw new Error(`No photo found for round "${slug}"`);
-  return match[1];
-}
+//
+// This module is deliberately free of Vite-specific APIs (no
+// `import.meta.glob`) so it can be imported by plain Node as well as by
+// Astro/Vite — scripts/verify-markers.ts does exactly that to check the
+// `marker` coordinates below against the actual photos. The Vite-only glue
+// that turns `photoSlug` into a built asset URL lives in ./round-photos.ts,
+// imported only from page code.
 
 export type Position = "top" | "bottom" | "left" | "right";
 
@@ -251,7 +247,3 @@ const roundDefs: Round[] = [
 ];
 
 export const rounds: Round[] = roundDefs;
-
-export function roundPhotoUrl(round: Round): string {
-  return photoUrl(round.photoSlug);
-}
