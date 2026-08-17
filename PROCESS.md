@@ -62,10 +62,10 @@ along with the report.
 [`d4ca5d4`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/d4ca5d4a1236261d30703522ed9031d6d3473ca6),
 [`aafd0ad`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/aafd0adb8b7d030087f7fe3686d8618cde6de77d)
 
-### 3. Reversed the detail-screen interaction contract after a usability report
+### 3. Reversed the detail-screen interaction contract after identifying a usability flaw
 
 The detail screen's "Next" affordance was the whole screen --- any tap on the
-photo or notes advanced to the next round. Reported as too easy to trigger by
+photo or notes advanced to the next round. Observed as too easy to trigger by
 accident while just reading. Rather than adding a visible button alongside the
 existing whole-screen handler (which would have left the accidental-advance
 case intact), removed the click listener from the screen entirely and rewrote
