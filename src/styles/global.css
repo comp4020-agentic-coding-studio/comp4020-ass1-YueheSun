@@ -299,8 +299,14 @@ h1 {
 .annotated-photo {
   position: relative;
   display: flex;
-  gap: 1rem;
-  align-items: flex-start;
+  justify-content: center;
+
+  /* Labels are position: absolute (see .annotation-label) so they don't
+     push this container's own box outward — vertical padding reserves
+     room for the top/bottom callout rows the narrow-viewport layout below
+     positions above/below the frame, so they don't sit on top of the
+     feature name or notes text instead. */
+  padding: 0.5rem 0;
   margin: 0 0 0.75rem;
 }
 
@@ -367,18 +373,28 @@ h1 {
   pointer-events: none;
 }
 
-.annotation-labels {
-  flex: 1 1 10rem;
-  min-width: 0;
-}
-
+/* Positioned by ../scripts/leader-lines.ts: left/right column on desktop
+   (anchored via right/left + translateY(-50%)), top/bottom row on mobile
+   (anchored via bottom/top + translateX(-50%)) — the exact left/right/
+   top/bottom + transform values are set inline at runtime because they
+   depend on the frame's real rendered rect. max-width keeps a run of text
+   wrapping instead of overlapping its neighbour once several labels share
+   a side. */
 .annotation-label {
+  position: absolute;
   display: flex;
   align-items: baseline;
   gap: 0.4rem;
-  min-height: 1.6rem;
-  margin: 0 0 0.3rem;
-  font-size: 0.9rem;
+  max-width: 8rem;
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.3;
+}
+
+/* Left column (desktop): text reads outward, away from the photo. */
+.annotation-label-start {
+  flex-direction: row-reverse;
+  text-align: right;
 }
 
 .annotation-label-index {
@@ -398,6 +414,14 @@ h1 {
 @media (width <= 30rem) {
   .annotated-photo {
     flex-direction: column;
+
+    /* Top/bottom label rows need real room reserved above and below the
+       frame, not the desktop's slim buffer — a label here is a badge plus
+       up to a few lines of wrapped text (see .annotation-label's mobile
+       override below), and without this it overlaps the feature name
+       above and the notes paragraph below instead of sitting in its own
+       space. */
+    padding: 4.5rem 0;
   }
 
   /* flex-basis applies to the main axis, which this breakpoint just
@@ -408,6 +432,19 @@ h1 {
      from the image's own rendered height again. */
   .annotated-photo-frame {
     flex-basis: auto;
+  }
+
+  /* Left/right no longer applies once labels sit above/below the photo —
+     both sides collapse to the same centered badge-over-text column here,
+     overriding .annotation-label-start's desktop mirroring (same class
+     specificity, so this later rule wins for elements carrying either
+     modifier class). */
+  .annotation-label {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 6rem;
+    font-size: 0.75rem;
   }
 
   .detail-outcome {

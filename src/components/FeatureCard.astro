@@ -1,11 +1,12 @@
 ---
 // Renders one species' feature card: name, italic Latin name, its photo
-// with every data.md-listed feature circled and numbered, a margin column
-// of matching numbered labels (the leader line connecting each pair is
-// drawn at runtime by ../scripts/leader-lines.ts, since circle and label
-// live in different coordinate spaces), a habits/habitat note, and — for a
-// confusable card — the comparison note explaining how to tell it apart
-// from the round's primary species.
+// with every data.md-listed feature ringed and labelled, a habits/habitat
+// note, and — for a confusable card — the comparison note explaining how to
+// tell it apart from the round's primary species. Each label is a plain
+// sibling of the photo frame: ../scripts/leader-lines.ts assigns it to a
+// side (left/right on desktop, top/bottom on mobile) and positions it at
+// runtime, since that assignment depends on real rendered geometry, not
+// anything decidable at build time.
 import { photoUrl } from "../data/round-photos";
 import type { SpeciesCard } from "../data/rounds";
 
@@ -32,15 +33,13 @@ const { card, comparisonNote } = Astro.props;
         />
       ))}
     </div>
-    <div class="annotation-labels">
-      {card.annotations.map((a, i) => (
-        <p class="annotation-label" data-annotation-index={i}>
-          <span class="annotation-label-index">{i + 1}</span>
-          {a.label}
-        </p>
-      ))}
-    </div>
-    <!-- Sits last so it paints over both the frame and the label column
+    {card.annotations.map((a, i) => (
+      <p class="annotation-label" data-annotation-index={i}>
+        <span class="annotation-label-index">{i + 1}</span>
+        {a.label}
+      </p>
+    ))}
+    <!-- Sits last so it paints over both the frame and every label
          (stacking order among position:relative/absolute siblings with no
          z-index follows DOM order) — the line has to be visible crossing
          both, not hidden under the photo. viewBox is set at runtime by

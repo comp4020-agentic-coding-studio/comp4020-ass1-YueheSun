@@ -135,6 +135,15 @@ repeatable one instead of a one-off:
   exercise them --- check those with a real rendered-page pass (`agent-browser`
   or equivalent) at both graded viewports before committing any round that
   touches the card layout.
+- **Labels must fan out to the photo's edges, not stack in one column.**
+  `leader-lines.ts` assigns each label to a side (left/right of the photo on
+  desktop, top/bottom on mobile) and spaces labels within a side evenly, so
+  they can't overlap regardless of how many annotations a card has. The
+  Daurian Redstart card (`daurianRedstartCard` in `src/data/rounds.ts`,
+  shared by rounds `redstart-daurian` and `redstart-plumbeous`) has 5
+  annotations --- the highest count in the data --- so it's the one to check
+  by eye, at both graded viewports, whenever this layout changes: confirm no
+  two labels overlap and every line still reaches the edge of its label.
 
 ## The stack is swappable
 
