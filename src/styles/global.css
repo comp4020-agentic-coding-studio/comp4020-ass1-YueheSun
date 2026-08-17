@@ -297,6 +297,7 @@ h1 {
 }
 
 .annotated-photo {
+  position: relative;
   display: flex;
   gap: 1rem;
   align-items: flex-start;
@@ -350,22 +351,19 @@ h1 {
    (rounds.ts), measured against the photo's own natural size — this only
    lines up because .feature-photo is shown at its natural aspect ratio
    (width: 100%; height: auto), never cropped, so "40% across the image"
-   means the same point at any display size. */
+   means the same point at any display size.
+   No number inside: the leader line to its label in the margin column is
+   what identifies which feature it marks, so the ring stays small enough
+   not to cover the feature itself. */
 .annotation-circle {
   position: absolute;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 0.85rem;
+  height: 0.85rem;
   transform: translate(-50%, -50%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   border-radius: 50%;
-  border: 2px solid #fc3;
-  box-shadow: 0 0 0 2px rgb(0 0 0 / 35%);
-  background: rgb(0 0 0 / 35%);
-  color: #fff;
-  font-size: 0.7rem;
-  font-weight: bold;
+  border: 1.5px solid #fc3;
+  box-shadow: 0 0 0 1.5px rgb(0 0 0 / 35%);
+  background: rgb(0 0 0 / 15%);
   pointer-events: none;
 }
 

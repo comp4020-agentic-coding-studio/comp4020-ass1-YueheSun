@@ -23,18 +23,13 @@ const { card, comparisonNote } = Astro.props;
   <div class="annotated-photo">
     <div class="annotated-photo-frame">
       <img class="feature-photo" src={photoUrl(card.photoSlug)} alt={card.name} draggable="false" />
-      <svg class="annotation-lines" aria-hidden="true">
-        {card.annotations.map((_, i) => (
-          <>
-            <line class="annotation-line-halo" data-annotation-index={i} />
-            <line class="annotation-line-stroke" data-annotation-index={i} />
-          </>
-        ))}
-      </svg>
       {card.annotations.map((a, i) => (
-        <span class="annotation-circle" data-annotation-index={i} style={`left:${a.x}%; top:${a.y}%;`}>
-          {i + 1}
-        </span>
+        <span
+          class="annotation-circle"
+          data-annotation-index={i}
+          style={`left:${a.x}%; top:${a.y}%;`}
+          aria-hidden="true"
+        />
       ))}
     </div>
     <div class="annotation-labels">
@@ -45,6 +40,22 @@ const { card, comparisonNote } = Astro.props;
         </p>
       ))}
     </div>
+    <!-- Sits last so it paints over both the frame and the label column
+         (stacking order among position:relative/absolute siblings with no
+         z-index follows DOM order) — the line has to be visible crossing
+         both, not hidden under the photo. viewBox is set at runtime by
+         leader-lines.ts to match .annotated-photo's own box, which this svg
+         now actually spans (inset: 0 against the row/column that holds it),
+         so its coordinate space matches every getBoundingClientRect() call
+         leader-lines.ts makes against that same ancestor. -->
+    <svg class="annotation-lines" aria-hidden="true">
+      {card.annotations.map((_, i) => (
+        <>
+          <line class="annotation-line-halo" data-annotation-index={i} />
+          <line class="annotation-line-stroke" data-annotation-index={i} />
+        </>
+      ))}
+    </svg>
   </div>
   <p class="feature-notes">{card.notes}</p>
   {comparisonNote && <p class="comparison-note">{comparisonNote}</p>}

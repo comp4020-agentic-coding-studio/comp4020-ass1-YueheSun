@@ -1,9 +1,17 @@
 // Draws the straight line connecting each annotation circle on a feature
-// card's photo to its numbered label in the margin column. Circles and
-// labels live in different coordinate spaces (the photo box vs. the margin
-// column), so their line has to be measured against real rendered
-// positions at runtime — it can't be hand-authored as fixed percentages,
-// because a responsive reflow moves the two boxes independently.
+// card's photo to its label in the margin column. The circle sits inside
+// .annotated-photo-frame (positioned as a % of the photo) while the label
+// sits in a separate sibling column, so their line has to be measured
+// against real rendered positions at runtime — it can't be hand-authored as
+// fixed percentages, because a responsive reflow (including the row→column
+// flip at the narrow-viewport breakpoint) moves the two boxes independently.
+// The svg itself is a third sibling spanning the whole .annotated-photo row
+// (or column, once that breakpoint flips it — see the position: relative on
+// .annotated-photo in global.css), so viewBox and every coordinate below
+// are measured against that shared ancestor, not the frame alone — sizing
+// it to the frame previously left the svg's rendered box smaller than the
+// space its lines needed to cross, which the browser's default
+// preserveAspectRatio then silently stretched to fit, squishing every line.
 //
 // A ResizeObserver per card (not a window resize listener + image load
 // listener) covers every case that needs a re-layout with one primitive:
