@@ -507,3 +507,48 @@ said "hard-code the pixel-equivalent rem value measured live"), not an
 oversight, and the phone screenshot still reads as proportionate rather than
 oversized — but it's worth naming plainly rather than letting "matches the
 guess screen" stand unqualified.
+
+### Found the actual coordinate-space bug behind "messy leader lines" instead of re-tuning line styling
+
+The user reported the leader lines connecting each annotation circle to its
+label were messy, seemingly tuned only for mobile, and cluttered on phone —
+plus that the circles were too big and covered the photo. The instinct-fix
+would have been styling (thinner strokes, smaller circles) and maybe a
+media-query special case for the line-drawing math. Reading
+`leader-lines.ts` and `FeatureCard.astro` together instead of just the CSS
+found the real cause: the `<svg class="annotation-lines">` element lived
+*inside* `.annotated-photo-frame` (CSS gave it `inset: 0`, sizing it to the
+photo alone), while `layout()` computed its `viewBox` from the *outer*
+`.annotated-photo` row/column — the same element that also holds the
+separate label list. Rendered-box and viewBox disagreeing triggered the
+SVG's default `preserveAspectRatio` scaling, which non-uniformly squished
+every line's coordinates. The mismatch's severity differs by layout
+direction (row on desktop vs. the narrow-viewport column flip), which is
+exactly why it looked mobile-specific and looked different-but-still-broken
+on desktop — one bug, viewport-dependent symptoms.
+
+The fix moved the svg to be the *last* sibling of `.annotated-photo` instead
+(so it visually spans the same box `layout()` already measures, and paints
+over both the frame and the label list) and added `position: relative` to
+`.annotated-photo` so that `inset: 0` resolves against it. No changes were
+needed to the coordinate math in `leader-lines.ts` itself — it was already
+written assuming this geometry; the bug was that the markup nested the svg
+one level too deep. Circles were separately shrunk (1.5rem → 0.85rem) and
+the number removed from inside them, since a working line-to-label
+connection makes the in-circle number redundant, and the smaller ring
+covers less of the photo.
+
+**Why this belongs here and not just as a styling tweak:** the fix changes
+what the two files' contract with each other actually *is* — `viewBox` and
+every `getBoundingClientRect()` delta in `leader-lines.ts` are now measured
+against the same ancestor the svg's CSS box actually spans, a coordinate-
+space invariant that wasn't true before and wasn't tested by anything
+mechanical (`rounds.test.ts` only checks stored `x`/`y` percentages, never
+runtime line rendering). Caught by reading the two files together against
+the CSS, then confirmed with `agent-browser` at both graded viewports
+(desktop `viewBox` now equals its rendered box exactly; mobile column layout
+draws correctly to the label under each ring; the confusable-panel
+first-expand and dropdown-switch redraws — the two cases the CSS composite
+in `verify:markers` can't exercise — both still worked).
+
+**Citation:** [`284c881`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/284c881).
