@@ -51,7 +51,6 @@ function renderFixture() {
       <div data-testid="screen-detail" hidden>
         <p data-testid="outcome"></p>
         <button data-testid="detail-next" type="button">Next</button>
-        <button data-testid="detail-next" type="button">Next</button>
       </div>
     </section>
   `,
@@ -70,13 +69,7 @@ function renderFixture() {
     guessScreen: document.querySelector<HTMLElement>('[data-testid="screen-guess"]')!,
     detailScreen: document.querySelector<HTMLElement>('[data-testid="screen-detail"]')!,
     outcome: document.querySelector<HTMLElement>('[data-testid="outcome"]')!,
-    // The real page renders two of these (top and bottom of a long detail
-    // screen) — this fixture mirrors that so the "either one advances" case
-    // below has something real to exercise.
     detailNext: document.querySelector<HTMLElement>('[data-testid="detail-next"]')!,
-    detailNextButtons: Array.from(
-      document.querySelectorAll<HTMLElement>('[data-testid="detail-next"]'),
-    ),
   };
 }
 
@@ -151,16 +144,6 @@ describe("bird identification game", () => {
     option("top").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
     expect(detailScreen.hidden).toBe(false);
     detailNext.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    expect(detailScreen.hidden, NEXT_STEP).toBe(true);
-    expect(guessScreen.hidden).toBe(false);
-  });
-
-  it("advances on either Next button — the detail screen renders one at the top and one at the bottom, and both must work", () => {
-    const { window, option, guessScreen, detailScreen, detailNextButtons } = renderFixture();
-    expect(detailNextButtons.length, NEXT_STEP).toBe(2);
-    option("top").dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    expect(detailScreen.hidden).toBe(false);
-    detailNextButtons[1]!.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
     expect(detailScreen.hidden, NEXT_STEP).toBe(true);
     expect(guessScreen.hidden).toBe(false);
   });

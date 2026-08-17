@@ -123,11 +123,9 @@ function wireRound(round: HTMLElement, onAdvance: () => void): void {
     if (direction) choose(direction);
   });
 
-  // Only the dedicated buttons advance — a tap anywhere else on the detail
+  // Only the dedicated button advances — a tap anywhere else on the detail
   // screen (photo, notes) used to trigger it too, which was too easy to
-  // fire by accident while just reading. There are two of them (top and
-  // bottom of a screen long enough to need both), so wire every match
-  // rather than assuming exactly one.
+  // fire by accident while just reading.
   for (const button of detailNextButtons) button.addEventListener("click", next);
 }
 
