@@ -1,24 +1,6 @@
 # Assignment 1 reflection
 
-**Breakthrough that moved the work forward:** The moment that actually
-changed how I worked wasn't a bug fix, it was realising that finding a bug
-once doesn't mean it's handled. When I put annotation markers on the bird
-photos, I eyeballed all 12 and caught 3 where the photo didn't even show the
-feature it claimed to. My first instinct was just to swap those 3 photos and
-move on — job done. But that "3 out of 12" number bugged me, because it meant
-the same mistake could easily happen again the next time a photo or
-coordinate changed, and nothing would catch it. So instead of patching and
-moving on, I built an actual check for it: a test for the mechanical stuff
-(coordinates in range, files exist) plus a script that composites the markers
-onto the real photos so I can eyeball them fast, and a CLAUDE.md rule saying
-"run this before you commit a photo change." I even talked myself out of
-wiring an AI vision check into CI, because a wrong-but-confident check is
-worse than no check. That felt like the real shift: from "did I fix it" to
-"will this stay fixed."
+**Breakthrough that moved the work forward:** The biggest change in how I worked was realising that finding a bug once doesn't mean it's handled. 
+At one point, I changed the interaction from a simple bird field guide into a quiz where the interaction itself explains why similar birds are easy to confuse. Instead of keeping the old tests and just changing the code until they passed, I changed interaction.test.ts first to define the new interaction contract. Later, I had a similar realisation with the bird photos. When I added annotation markers, I checked all 12 photos and found 3 where the photo didn't actually show the feature the round claimed. My first instinct was just to replace those 3 photos and move on. But "3 out of 12" made me realise this could happen again. So I turned the one-off check into a real test, a marker verification script, and a CLAUDE.md rule requiring the check before photo changes are committed. I also decided not to add an AI vision check to CI because an automated check that can confidently give the wrong answer would not be very useful.
 
-**What this changed about who I want to be as a developer:** I want to be
-someone who turns a caught mistake into something that can't quietly happen
-again, not just someone who's good at fixing things when they're pointed out.
-Retrying until something looks right is easy and feels productive, but it
-doesn't protect future-me. Writing the check, the rule, or the test is the
-slower move, but it's the one that actually compounds.
+**What this changed about who I want to be as a developer:** I want to be someone who doesn't just fix the problem in front of me, but improves the way I work so the same problem is easier to catch next time. I also want to be more careful about what my tests are actually checking, rather than assuming that green tests mean everything is correct. For me, good development is not just getting the code to pass. It is making the standard clearer and making that standard easier to follow the next time.
