@@ -552,3 +552,42 @@ first-expand and dropdown-switch redraws — the two cases the CSS composite
 in `verify:markers` can't exercise — both still worked).
 
 **Citation:** [`284c881`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/284c881).
+
+### Replaced the single legend-column model with per-side label placement, after a fixed bug still wasn't enough
+
+**What happened:** After `284c881` fixed the coordinate-space bug (lines now
+land correctly at both viewports), the user's response was "No, it's still
+hard to read" — the *architecture*, not just that bug, was the problem:
+one stacked column of labels can't scale with annotation count. The
+5-feature Daurian Redstart card (the highest count in the data) still read
+as cramped, with converging lines crossing near the photo, no matter how
+cleanly those lines were now drawn. Fixing the rendering bug and stopping
+there would have been "retried until the complaint about *that* went away"
+without addressing the complaint actually made.
+
+The instinct-fix under time pressure would have been another styling pass
+on the same one-column model — smaller font, tighter line-height, maybe
+truncating long labels — none of which changes the fact that N labels in
+one column take N slots regardless of the photo's own shape. Instead
+`leader-lines.ts` now assigns each label to one of two sides at runtime
+(left/right of the photo on desktop, split by each annotation's stored x;
+top/bottom on mobile, split by y instead, since a phone's photo is tall and
+narrow) and evenly spaces labels within a side — which makes overlap
+structurally impossible at any annotation count, not just tuned away for
+the current maximum of 5. A `matchMedia` listener on the same breakpoint
+`.annotated-photo`'s CSS already uses re-triggers this on a viewport resize
+that crosses it, confirmed by resizing across 30rem in one open browser
+session without a reload and watching the split flip from left/right to
+top/bottom live.
+
+**Why this belongs here and not just as a styling tweak:** the fix is
+documented as a constraint in `CLAUDE.md` itself (a new bullet under
+"Verifying detail-photo markers" naming the Daurian Redstart card as the
+one to eyeball whenever this layout changes), landed in the same commit as
+the code — not a verbal decision that only lives in this conversation. Per
+this repo's own bar, a correction only counts once it changes what future
+work is checked against; recording "labels must fan out, don't just
+restyle a column" only becomes real once it's a rule an agent (or future
+me) can be held to, not a one-off retry.
+
+**Citation:** [`192e788`](https://github.com/comp4020-agentic-coding-studio/comp4020-ass1-YueheSun/commit/192e788).
